@@ -48,6 +48,12 @@ public class Drivebase {
     CANSparkMax rightmotor1;
     CANSparkMax rightmotor2;
     CANSparkMax rightmotor3;
+
+    // test mode //
+    boolean runleft = false;
+    boolean runright = false;
+    double testspeed = 0;
+    // test mode //
 //
 //   ###    ###   #   #  #####  ####    ###   #      
 //  #   #  #   #  ##  #    #    #   #  #   #  #      
@@ -141,5 +147,48 @@ public class Drivebase {
   public void idle() {
   }
 
-// end of Subsystem class
+
+// 
+//  #####  #####   ####  #####
+//    #    #      #        #
+//    #    ####    ###     #
+//    #    #          #    #
+//    #    #####  ####     #
+//
+//  provides special support for testing individual subsystem functionality
+  public void test() {
+    if (control.getAButton()) {
+      testspeed = control.getRightTriggerAxis() - control.getLeftTriggerAxis();
+    }
+    if (control.getBackButton()) {
+      runleft = false;
+      runright = false;
+    }
+    if (control.getLeftBumper()) {
+      runleft = true;
+    }
+    if (control.getRightBumper()) {
+      runright = true;
+    }
+    if (runleft) {
+      leftmotor1.set(testspeed);
+      leftmotor2.set(testspeed);  
+      leftmotor3.set(testspeed);
+    } else {
+      leftmotor1.set(0);
+      leftmotor2.set(0);  
+      leftmotor3.set(0);
+    }
+    if (runright) {
+      rightmotor1.set(testspeed);
+      rightmotor2.set(testspeed);  
+      rightmotor3.set(testspeed);
+    } else {
+      rightmotor1.set(0);
+      rightmotor2.set(0);  
+      rightmotor3.set(0);
+    }
+  }
+
+// end of Drivebase class
 }

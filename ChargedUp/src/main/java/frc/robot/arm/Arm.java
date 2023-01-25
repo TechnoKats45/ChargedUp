@@ -190,5 +190,17 @@ void slide(double speed) {
   public void idle() {
   }
 
-// end of Subsystem class
+  
+// 
+//  #####  #####   ####  #####
+//    #    #      #        #
+//    #    ####    ###     #
+//    #    #          #    #
+//    #    #####  ####     #
+//
+//  provides special support for testing individual subsystem functionality
+public void test() {
+}
+
+// end of Arm class
 }

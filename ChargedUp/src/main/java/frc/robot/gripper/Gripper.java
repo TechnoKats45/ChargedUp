@@ -83,6 +83,10 @@ void release() {
 
 }
 
+void rotate(double speed) {
+  
+}
+
 //
 //   ####  #####  #   #   ####  #####  
 //  #      #      ##  #  #      #      

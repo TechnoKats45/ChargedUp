@@ -27,8 +27,8 @@ public class Robot extends TimedRobot {
   private XboxController drivercontroller = new XboxController(0);
   private Drivebase drivebase = new Drivebase(drivercontroller);
   private Joystick operatorcontroller = new Joystick(1);
-  private Arm arm = new Arm(operatorcontroller);
-  private Gripper gripper = new Gripper(operatorcontroller);
+  //private Arm arm = new Arm(operatorcontroller);
+  //private Gripper gripper = new Gripper(operatorcontroller);
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -50,8 +50,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     drivebase.idle();
-    arm.idle();
-    gripper.idle();
+    //arm.idle();
+    //gripper.idle();
   }
 
   /**
@@ -93,8 +93,8 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     drivebase.run();
-    arm.run();
-    gripper.run();
+    //arm.run();
+    //gripper.run();
   }
   /** This function is called once when the robot is disabled. */
   @Override
@@ -112,8 +112,8 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
     drivebase.test();
-    arm.test();
-    gripper.test();
+    //arm.test();
+    //gripper.test();
   }
 
   /** This function is called once when the robot is first started up. */

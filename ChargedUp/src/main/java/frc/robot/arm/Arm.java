@@ -136,9 +136,9 @@ void slide(double speed) {
   public Arm(Joystick userController) {
      // initialize
      control = userController;
-     elevationmotor = new CANSparkMax(config.km_elevate, MotorType.kBrushless);
-     slidemotor = new Spark(config.km_slide);
-     extensionmotor = new CANSparkMax(config.km_extend, MotorType.kBrushless);
+     elevationmotor = new CANSparkMax(config.kmc_elevate, MotorType.kBrushless);
+     slidemotor = new Spark(config.kmp_slide);
+     extensionmotor = new CANSparkMax(config.kmc_extend, MotorType.kBrushless);
 
   }
 

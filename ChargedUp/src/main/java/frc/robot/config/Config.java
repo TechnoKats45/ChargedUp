@@ -19,39 +19,60 @@ public class Config {
   public final double kk_wheelbase = 18.0;
   public final double kk_slipfactor = 0.8;
 
+  public final double kk_inchesPerCount = (
+    kk_wheeldiameter /* inch */ / 1.0 /* diameter */
+  * 3.14159 /* diameter */ / 1.0 /* circumference */
+  * 1.0 /* circumference */ / kk_gearreduction /* motor revolutions */
+  * 1.0 /* motor revoluions */ / 1.0 /* count */
+  );
+
+  public final double kk_degreesPerCount = (
+    kk_wheeldiameter /* inch */ / 1.0 /* diameter */
+  * 3.14159 /* diameter */ / 1.0 /* circumference */
+  * 1.0 /* circumference */ / kk_gearreduction /* motor revolutions */
+  * 1.0 /* motor revolutions */ / 1.0 /* count */
+  * 1.0 /* wheelbase */ / kk_wheelbase /* inch */
+  * 1.0 /* circle */ / 6.28308 /* wheelbase */
+  * 360.0 /* degree */ / 1.0 /* circle */
+  * kk_slipfactor /* slip factor */
+  );
+
+
 // CAN motor control IDs
 // -- drivebase --
-  public final int km_left1 = 1;
-  public final int km_left2 = 3;
-  public final int km_left3 = 5;
-  public final int km_right1 = 2;
-  public final int km_right2 = 4;
-  public final int km_right3 = 6;
+  public final int kmc_left1 = 2;
+  public final int kmc_left2 = 4;
+  public final int kmc_left3 = 6;
+  public final int kmc_right1 = 1;
+  public final int kmc_right2 = 3;
+  public final int kmc_right3 = 5;
+  public final boolean kk_leftinvert = false;
+  public final boolean kk_rightinvert = true;
 // -- arm --
-  public final int km_elevate = 7;
-  public final int km_extend = 8;
+  public final int kmc_elevate = 7;
+  public final int kmc_extend = 8;
 
 // PWM motor control IDs
 // -- arm --
-public final int km_slide = 0;
+public final int kmp_slide = 0;
 // -- gripper --
-public final int km_rotate = 1;
+public final int kmp_rotate = 1;
 
 // Pneumatic control IDs
-public final int kp_grab_in = 0;
-public final int kp_grab_out = 1;
+public final int kpd_grab_in = 0;
+public final int kpd_grab_out = 1;
 
 // Digital inputs
-public int kd_armforward = 0;
-public int kd_armbackward = 1;
-public int kd_extendout = 2;
-public int kd_extendin = 3;
-public int kd_slideleft = 4;
-public int kd_slideright = 5;
+public int kdi_armforward = 0;
+public int kdi_armbackward = 1;
+public int kdi_extendout = 2;
+public int kdi_extendin = 3;
+public int kdi_slideleft = 4;
+public int kdi_slideright = 5;
 
 // Analog inputs
-public int ka_elevate = 0;
-public int ka_slide = 1;
+public int kai_elevate = 0;
+public int kai_slide = 1;
 
 
   public Config() {

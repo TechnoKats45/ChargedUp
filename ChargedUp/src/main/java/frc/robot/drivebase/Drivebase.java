@@ -46,12 +46,12 @@ public class Drivebase {
 //  global variables
     XboxController control;
 
-    CANSparkMax leftmotor1;
-    CANSparkMax leftmotor2;
-    CANSparkMax leftmotor3;
-    CANSparkMax rightmotor1;
-    CANSparkMax rightmotor2;
-    CANSparkMax rightmotor3;
+    CANSparkMax motor_left1;
+    CANSparkMax motor_left2;
+    CANSparkMax motor_left3;
+    CANSparkMax motor_right1;
+    CANSparkMax motor_right2;
+    CANSparkMax motor_right3;
 
     Config config = new Config();
 
@@ -65,9 +65,9 @@ public class Drivebase {
   
 
     // test mode //
-    boolean runleft = false;
-    boolean runright = false;
-    double testspeed = 0;
+    boolean test_runleft = false;
+    boolean test_runright = false;
+    double test_speed = 0;
     // test mode //
 //
 //   ###    ###   #   #  #####  ####    ###   #      
@@ -78,36 +78,32 @@ public class Drivebase {
 //
 //  private functions for driver/operator input
 
+// accommodate a deadband around zero for joystick inputs
+private double deadband(double in, double band) {
+  double value = 0;
+  if (in > band) {
+    value = in-band;
+  }
+  if (in <-band) {
+    value = in+band;
+  }
+  return value / (1-band);
+}
+
 // tank control (individual left and right throttles)
   private double c_leftthrottle() {
-    double val = -control.getLeftY();
-    if ((-0.2 < val) && (val < 0.2)) {
-      val = 0;
-    }
-    return val;
+    return deadband(-control.getLeftY(),0.2);
   }
   private double c_rightthrottle() {
-    double val = -control.getRightY();
-    if ((-0.2 < val) && (val < 0.2)) {
-      val = 0;
-    }
-    return val;  
+    return deadband(-control.getRightY(),0.2);
   }
 
 // split arcade control (speed on left, steer on right)
   private double c_speed() {
-    double val = -control.getLeftY();
-    if ((-0.2 < val) && (val < 0.2)) {
-      val = 0;
-    } 
-    return val;
+    return deadband(-control.getLeftY(),0.2);
   }
   private double c_steer() {
-    double val = control.getRightX();
-    if ((-0.2 < val) && (val < 0.2)) {
-      val = 0;
-    } 
-    return val/5.0;
+    return deadband(control.getRightX(),0.2)/5.0;
   }
 
 // check driver input mode
@@ -147,15 +143,17 @@ public class Drivebase {
 
 // set 
   private void leftspeed(double speed) {
-    leftmotor1.set(speed);
-    leftmotor2.set(speed);
-    leftmotor3.set(speed);
+    SmartDashboard.putNumber("left speed", speed);
+    motor_left1.set(speed);
+    motor_left2.set(speed);
+    motor_left3.set(speed);
   }
 
   private void rightspeed(double speed) {
-    rightmotor1.set(speed);
-    rightmotor2.set(speed);
-    rightmotor3.set(speed);
+    SmartDashboard.putNumber("right speed:", speed);
+    motor_right1.set(speed);
+    motor_right2.set(speed);
+    motor_right3.set(speed);
 
   }
 
@@ -170,12 +168,12 @@ public class Drivebase {
 
   // read accumulated left side motor position
   private double odoleft() {
-    return leftmotor1.getEncoder().getPosition();
+    return motor_left1.getEncoder().getPosition();
   }
 
   // read accumulated right side motor position
   private double odoright() {
-    return -rightmotor1.getEncoder().getPosition();
+    return -motor_right1.getEncoder().getPosition();
   }
 
   // read the number of inches traveled since the last reset
@@ -209,7 +207,7 @@ public class Drivebase {
 //  #   #  #   #    #    #   #  
 //  #   #   ###     #     ###   
 //
-//  public functions for autonomous input
+//  public functions for autonomous control
 
 //
 // utility functions
@@ -235,12 +233,12 @@ public class Drivebase {
     // initialize
     control = driverControl;
 
-    leftmotor1 = newNEO(config.kmc_left1, config.kk_leftinvert);
-    leftmotor2 = newNEO(config.kmc_left2, config.kk_leftinvert);
-    leftmotor3 = newNEO(config.kmc_left3, config.kk_leftinvert);
-    rightmotor1 = newNEO(config.kmc_right1, config.kk_rightinvert);
-    rightmotor2 = newNEO(config.kmc_right2, config.kk_rightinvert);
-    rightmotor3 = newNEO(config.kmc_right3, config.kk_rightinvert);
+    motor_left1 = newNEO(config.kmc_left1, config.kk_leftinvert);
+    motor_left2 = newNEO(config.kmc_left2, config.kk_leftinvert);
+    motor_left3 = newNEO(config.kmc_left3, config.kk_leftinvert);
+    motor_right1 = newNEO(config.kmc_right1, config.kk_rightinvert);
+    motor_right2 = newNEO(config.kmc_right2, config.kk_rightinvert);
+    motor_right3 = newNEO(config.kmc_right3, config.kk_rightinvert);
   }
 
 
@@ -258,20 +256,20 @@ public class Drivebase {
     if (oldBrakeMode != c_brakeMode()) {
       switch (motorBrakeMode) {
         case BRAKE:
-          leftmotor1.setIdleMode(IdleMode.kBrake);
-          leftmotor2.setIdleMode(IdleMode.kBrake);
-          leftmotor3.setIdleMode(IdleMode.kBrake);
-          rightmotor1.setIdleMode(IdleMode.kBrake);
-          rightmotor2.setIdleMode(IdleMode.kBrake);
-          rightmotor3.setIdleMode(IdleMode.kBrake);
+          motor_left1.setIdleMode(IdleMode.kBrake);
+          motor_left2.setIdleMode(IdleMode.kBrake);
+          motor_left3.setIdleMode(IdleMode.kBrake);
+          motor_right1.setIdleMode(IdleMode.kBrake);
+          motor_right2.setIdleMode(IdleMode.kBrake);
+          motor_right3.setIdleMode(IdleMode.kBrake);
           break;
         case COAST:
-          leftmotor1.setIdleMode(IdleMode.kCoast);
-          leftmotor2.setIdleMode(IdleMode.kCoast);
-          leftmotor3.setIdleMode(IdleMode.kCoast);
-          rightmotor1.setIdleMode(IdleMode.kCoast);
-          rightmotor2.setIdleMode(IdleMode.kCoast);
-          rightmotor3.setIdleMode(IdleMode.kCoast);
+          motor_left1.setIdleMode(IdleMode.kCoast);
+          motor_left2.setIdleMode(IdleMode.kCoast);
+          motor_left3.setIdleMode(IdleMode.kCoast);
+          motor_right1.setIdleMode(IdleMode.kCoast);
+          motor_right2.setIdleMode(IdleMode.kCoast);
+          motor_right3.setIdleMode(IdleMode.kCoast);
         break;
       }
     }
@@ -293,8 +291,6 @@ public class Drivebase {
         right = 0;
         break;
     }
-    SmartDashboard.putNumber("left speed", left);
-    SmartDashboard.putNumber("right speed:", right);
     leftspeed(left);
     rightspeed(right);
   }
@@ -342,25 +338,25 @@ public class Drivebase {
 //  provides special support for testing individual subsystem functionality
   public void test() {
     if (control.getAButton()) {
-      testspeed = control.getRightTriggerAxis() - control.getLeftTriggerAxis();
+      test_speed = control.getRightTriggerAxis() - control.getLeftTriggerAxis();
     }
     if (control.getBackButton()) {
-      runleft = false;
-      runright = false;
+      test_runleft = false;
+      test_runright = false;
     }
     if (control.getLeftBumper()) {
-      runleft = true;
+      test_runleft = true;
     }
     if (control.getRightBumper()) {
-      runright = true;
+      test_runright = true;
     }
-    if (runleft) {
-      leftspeed(testspeed);
+    if (test_runleft) {
+      leftspeed(test_speed);
     } else {
       leftspeed(0);
     }
-    if (runright) {
-      rightspeed(testspeed);
+    if (test_runright) {
+      rightspeed(test_speed);
     } else {
       rightspeed(0);
     }

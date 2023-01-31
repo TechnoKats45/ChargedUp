@@ -27,8 +27,8 @@ public class Robot extends TimedRobot {
   private XboxController drivercontroller = new XboxController(0);
   private Drivebase drivebase = new Drivebase(drivercontroller);
   private Joystick operatorcontroller = new Joystick(1);
-  //private Arm arm = new Arm(operatorcontroller);
-  //private Gripper gripper = new Gripper(operatorcontroller);
+  private Arm arm = new Arm(operatorcontroller);
+  private Gripper gripper = new Gripper(operatorcontroller);
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.

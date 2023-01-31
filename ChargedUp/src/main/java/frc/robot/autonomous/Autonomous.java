@@ -1,11 +1,11 @@
 
 // TechnoKats Robotics Team - 2023 FRC season: CHARGED UP
 //
-//   ####  ####    ###   ####   ####   #####  ####
-//  #      #   #    #    #   #  #   #  #      #   #
-//  # ###  ####     #    ####   ####   ####   ####
-//  #   #  #   #    #    #      #      #      #   #
-//   ###   #   #   ###   #      #      #####  #   #
+//   ###   #   #  #####   ###   #   #   ###   #   #   ###   #   #   ####
+//  #   #  #   #    #    #   #  ##  #  #   #  ## ##  #   #  #   #  #
+//  #####  #   #    #    #   #  # # #  #   #  # # #  #   #  #   #   ###
+//  #   #  #   #    #    #   #  #  ##  #   #  #   #  #   #  #   #      #
+//  #   #   ###     #     ###   #   #   ###   #   #   ###    ###   ####
 //
 //  description
 //
@@ -17,20 +17,15 @@
 //  actuators
 //  sensors
 
-package frc.robot.gripper;
+package frc.robot.autonomous;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.*;
-
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import frc.robot.config.*;
-
-
+import frc.robot.drivebase.*;
+import frc.robot.arm.*;
+import frc.robot.gripper.*;
 
 //  imports (controllers, actuators, sensors, communication)
 
-public class Gripper {
+public class Autonomous {
 
   // controllers
   // actuators
@@ -45,11 +40,9 @@ public class Gripper {
 //
 //  global variables
 
-  Config config = new Config();
-
-  Joystick control;
-
-  DoubleSolenoid grabber;
+private Drivebase drivebase;
+private Arm arm;
+private Gripper gripper;
 
 //
 //   ###    ###   #   #  #####  ####    ###   #      
@@ -60,14 +53,7 @@ public class Gripper {
 //
 //  private functions for driver/operator input
 
-  boolean c_grab() {
-    return control.getRawButton(6);
-  }
-
-  boolean c_release() {
-    return control.getRawButton(5);
-  }
-
+/* Autonomous mode does not have any driver or operator controls! */
 
 //
 //   ###    ###   #####  #   #   ###   #####  #####  
@@ -78,18 +64,7 @@ public class Gripper {
 //
 //  private functions for motor/pneumatic/servo output
 
-void grab() {
-  grabber.set(kForward);
-}
-
-void release() {
-  grabber.set(kReverse);
-
-}
-
-void rotate(double speed) {
-  
-}
+/* Autonomous mode  */
 
 //
 //   ####  #####  #   #   ####  #####  
@@ -120,9 +95,11 @@ void rotate(double speed) {
 //
 //  creates a new Subsystem 
 
-  public Gripper(Joystick userControl) {
+  public Autonomous(Drivebase p_drivebase, Arm p_arm, Gripper p_gripper) {
     // initialize
-    grabber = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, config.kpd_grab_in, config.kpd_grab_out);
+    drivebase = p_drivebase;
+    arm = p_arm;
+    gripper = p_gripper;
   }
 
 
@@ -135,12 +112,6 @@ void rotate(double speed) {
 //
 //  does everything necessary when the robot is enabled, either autonomous or teleoperated
   public void run() {
-    if (c_grab()) {
-      grab();
-    }
-    if (c_release()) {
-      release();
-    }
   }
 
 
@@ -167,5 +138,5 @@ void rotate(double speed) {
   public void test() {
   }
 
-// end of Gripper class
+// end of Autonomous class
 }

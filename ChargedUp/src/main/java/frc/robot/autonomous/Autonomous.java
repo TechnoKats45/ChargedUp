@@ -19,6 +19,9 @@
 
 package frc.robot.autonomous;
 
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import frc.robot.drivebase.*;
 import frc.robot.arm.*;
 import frc.robot.gripper.*;
@@ -40,9 +43,21 @@ public class Autonomous {
 //
 //  global variables
 
+private static final String kDefaultAuto = "Default";
+private static final String kCustomAuto = "My Auto";
+
+private final SendableChooser<String> m_chooser = new SendableChooser<>();  
+
 private Drivebase drivebase;
 private Arm arm;
 private Gripper gripper;
+private String mode = "";
+private String state = "";
+
+private void setstate(String p_state) {
+  state = p_state;
+  SmartDashboard.putString("auto state",state);
+}
 
 //
 //   ###    ###   #   #  #####  ####    ###   #      
@@ -100,8 +115,19 @@ private Gripper gripper;
     drivebase = p_drivebase;
     arm = p_arm;
     gripper = p_gripper;
+    // initialize
+    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
+    m_chooser.addOption("My Auto", kCustomAuto);
+    SmartDashboard.putData("Auto choices", m_chooser);
+
   }
 
+  public void init() {
+    mode = m_chooser.getSelected();
+    SmartDashboard.putString("auto mode", mode);
+    System.out.println("Auto selected: " + mode);
+    setstate("Start");
+  }
 
 //
 //  ####   #   #  #   #
@@ -112,6 +138,16 @@ private Gripper gripper;
 //
 //  does everything necessary when the robot is enabled, either autonomous or teleoperated
   public void run() {
+    SmartDashboard.putString("auto state", mode+" "+state);
+    switch (mode) {
+        case kCustomAuto:
+          // Put custom auto code here
+          break;
+        case kDefaultAuto:
+        default:
+          // Put default auto code here
+          break;
+      }
   }
 
 

@@ -43,8 +43,17 @@ public class Autonomous {
 //
 //  global variables
 
-private static final String kDefaultAuto = "Default";
-private static final String kCustomAuto = "My Auto";
+private static final String kDefault = "Default"; // 0
+private static final String kCustom = "Custom";
+private static final String kLeave = "Leave"; // 1
+private static final String kScoreLeave = "Score & Leave"; // 2
+private static final String kScoreLeaveScoresamerow = "Score & Leave & Score same row"; // 3
+private static final String kScoreLeaveScoredifferent = "Score & Leave & Score different row"; // 4
+private static final String kScoreDocked = "Score & Docked"; // 5
+private static final String kScoreLeaveDocked = "Score & Leave & Docked"; // 6
+private static final String kScoreLeaveScoreDocked = "Score & Leave & Score & Docked"; // 7
+private static final String kScoreLeaveScoreScoresamerow = "Score & Leave & Score & Score same row"; // 8
+private static final String kScoreLeaveScoreScoredifferent = "Score & Leave & Score & Score differnt row"; // 9
 
 private final SendableChooser<String> m_chooser = new SendableChooser<>();  
 
@@ -59,47 +68,74 @@ private void setstate(String p_state) {
   SmartDashboard.putString("auto state",state);
 }
 
-//
-//   ###    ###   #   #  #####  ####    ###   #      
-//  #   #  #   #  ##  #    #    #   #  #   #  #      
-//  #      #   #  # # #    #    ####   #   #  #      
-//  #   #  #   #  #  ##    #    #  #   #   #  #      
-//   ###    ###   #   #    #    #   #   ###   #####  
-//
-//  private functions for driver/operator input
-
-/* Autonomous mode does not have any driver or operator controls! */
 
 //
-//   ###    ###   #####  #   #   ###   #####  #####  
-//  #   #  #   #    #    #   #  #   #    #    #      
-//  #####  #        #    #   #  #####    #    ####   
-//  #   #  #   #    #    #   #  #   #    #    #      
-//  #   #   ###     #     ###   #   #    #    #####  
-//
-//  private functions for motor/pneumatic/servo output
-
-/* Autonomous mode  */
-
-//
-//   ####  #####  #   #   ####  #####  
-//  #      #      ##  #  #      #      
-//   ###   ####   # # #   ###   ####   
-//      #  #      #  ##      #  #      
-//  ####   #####  #   #  ####   #####  
-//
-//  private functions for sensor feedback
-
-
-//
-//   ###   #   #  #####   ###   
-//  #   #  #   #    #    #   #  
-//  #####  #   #    #    #   #  
-//  #   #  #   #    #    #   #  
-//  #   #   ###     #     ###   
+//  ####    ###   #   #  #####   ###   #   #  #####   ####
+//  #   #  #   #  #   #    #      #    ##  #  #      #
+//  ####   #   #  #   #    #      #    # # #  ####    ###
+//  #   #  #   #  #   #    #      #    #  ##  #          #
+//  #   #   ###    ###     #     ###   #   #  #####  ####
 //
 //  public functions for autonomous input
 
+private void doDefault() {
+  // do nothing
+}
+
+private void doCustom() {
+  switch (state) {
+    case "Start":
+      drivebase.drive(-60);
+      setstate("Driving");
+      break;
+   case "Driving":
+      if (drivebase.stopped()) {
+        setstate("End");
+      }
+      break;
+    case "End":
+      break;
+    default:
+      setstate ("End");
+      break;  
+  }
+}
+
+private void doLeave() {
+
+}
+
+private void doScoreLeave() {
+
+}
+
+private void doScoreLeaveScoresamerow() {
+
+}
+
+private void doScoreLeaveScoredifferent() {
+
+}
+
+private void doScoreDocked() {
+
+}
+
+private void doScoreLeaveDocked() {
+
+}
+
+private void doScoreLeaveScoreDocked() {
+
+}
+
+private void doScoreLeaveScoreScoresamerow() {
+
+}
+
+private void doScoreLeaveScoreScoredifferent() {
+
+}
 
 //
 //   ###    ###   #   #   ####  #####  ####   #   #   ###   #####   ###   ####
@@ -116,8 +152,17 @@ private void setstate(String p_state) {
     arm = p_arm;
     gripper = p_gripper;
     // initialize
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
+    m_chooser.setDefaultOption("Default Auto", kDefault);
+    m_chooser.addOption("Custom Auto", kCustom);
+    m_chooser.addOption(kLeave,kLeave);
+    m_chooser.addOption(kScoreLeave,kScoreLeave);
+    m_chooser.addOption(kScoreLeaveScoresamerow,kScoreLeaveScoreScoresamerow);
+    m_chooser.addOption(kScoreLeaveScoredifferent,kScoreLeaveScoredifferent);
+    m_chooser.addOption(kScoreDocked,kScoreDocked);
+    m_chooser.addOption(kScoreLeaveDocked,kScoreLeaveDocked);
+    m_chooser.addOption(kScoreLeaveScoreDocked,kScoreLeaveScoreDocked);
+    m_chooser.addOption(kScoreLeaveScoreScoresamerow,kScoreLeaveScoresamerow);
+    m_chooser.addOption(kScoreLeaveScoreScoredifferent,kScoreLeaveScoreScoredifferent);
     SmartDashboard.putData("Auto choices", m_chooser);
 
   }
@@ -140,38 +185,43 @@ private void setstate(String p_state) {
   public void run() {
     SmartDashboard.putString("auto state", mode+" "+state);
     switch (mode) {
-        case kCustomAuto:
+        case kCustom:
+          doCustom();
           // Put custom auto code here
           break;
-        case kDefaultAuto:
+        case kLeave:
+          doLeave();
+          break;
+        case kScoreLeave:
+          doScoreLeave();
+          break;
+        case kScoreLeaveScoresamerow:
+          doScoreLeaveScoresamerow();
+          break;
+        case kScoreLeaveScoredifferent:
+          doScoreLeaveScoredifferent();
+          break;
+        case kScoreDocked:
+          doScoreDocked();
+          break;
+        case kScoreLeaveDocked:
+          doScoreLeaveDocked();
+          break;
+        case kScoreLeaveScoreDocked:
+          doScoreLeaveScoreDocked();
+          break;
+        case kScoreLeaveScoreScoresamerow:
+          doScoreLeaveScoreScoresamerow();
+          break;
+        case kScoreLeaveScoreScoredifferent:
+          doScoreLeaveScoreScoredifferent();
+          break;
+        case kDefault:
         default:
           // Put default auto code here
+          doDefault();
           break;
       }
-  }
-
-
-//
-//   ###   ####   #      #####  
-//    #    #   #  #      #      
-//    #    #   #  #      ####   
-//    #    #   #  #      #      
-//   ###   ####   #####  #####  
-//
-//  does everything necessary when the robot is running, either enabled or disabled
-  public void idle() {
-  }
-
-  
-// 
-//  #####  #####   ####  #####
-//    #    #      #        #
-//    #    ####    ###     #
-//    #    #          #    #
-//    #    #####  ####     #
-//
-//  provides special support for testing individual subsystem functionality
-  public void test() {
   }
 
 // end of Autonomous class

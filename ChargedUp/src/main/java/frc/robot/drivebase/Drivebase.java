@@ -19,6 +19,7 @@
 
 package frc.robot.drivebase;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -62,6 +63,9 @@ public class Drivebase {
     BrakeModeType motorBrakeMode = BrakeModeType.BRAKE;
     enum DriverInputModeType {TANK, ARCADE}
     DriverInputModeType driverInputMode = DriverInputModeType.ARCADE;
+    int autodrive_target = 0;
+    boolean autodrive_active = false;
+    PIDController drive_pid = new PIDController(config.kP_drive, config.kI_drive, config.kD_drive);
   
 
     // test mode //
@@ -173,7 +177,7 @@ private double deadband(double in, double band) {
 
   // read accumulated right side motor position
   private double odoright() {
-    return -motor_right1.getEncoder().getPosition();
+    return motor_right1.getEncoder().getPosition();
   }
 
   // read the number of inches traveled since the last reset
@@ -209,6 +213,16 @@ private double deadband(double in, double band) {
 //
 //  public functions for autonomous control
 
+  public void drive(int distance) {
+    distanceReset();
+    autodrive_target = distance;
+    autodrive_active = true;
+  }
+
+  public boolean stopped() {
+    return !autodrive_active;
+  }
+
 //
 // utility functions
 
@@ -239,6 +253,9 @@ private double deadband(double in, double band) {
     motor_right1 = newNEO(config.kmc_right1, config.kk_rightinvert);
     motor_right2 = newNEO(config.kmc_right2, config.kk_rightinvert);
     motor_right3 = newNEO(config.kmc_right3, config.kk_rightinvert);
+
+    distanceReset();
+    directionReset();
   }
 
 
@@ -251,6 +268,49 @@ private double deadband(double in, double band) {
 //
 //  does everything necessary when the robot is enabled, either autonomous or teleoperated
   public void run() {
+
+    double left = 0;
+    double right = 0;
+    switch (driverInputMode) {
+      case TANK:
+        left = c_leftthrottle();
+        right = c_rightthrottle();
+        break;
+      case ARCADE:
+        left = c_speed()+c_steer();
+        right = c_speed()-c_steer();
+        break;
+      default:
+        left = 0;
+        right = 0;
+        break;
+    }
+    if ((left != 0) | (right != 0)) {
+      autodrive_active = false;
+    }
+    if (autodrive_active) {
+      left = right = drive_pid.calculate(distance(), autodrive_target);
+    }
+    leftspeed(left);
+    rightspeed(right);
+  }
+
+
+//
+//   ###   ####   #      #####  
+//    #    #   #  #      #      
+//    #    #   #  #      ####   
+//    #    #   #  #      #      
+//   ###   ####   #####  #####  
+//
+//  does everything necessary when the robot is running, either enabled or disabled
+  public void idle() {
+    if (control.getLeftStickButton()) {
+      distanceReset();
+    }
+    if (control.getRightStickButton()) {
+      directionReset();
+    }
     SmartDashboard.putNumber("POV", control.getPOV());
     BrakeModeType oldBrakeMode = motorBrakeMode;
     if (oldBrakeMode != c_brakeMode()) {
@@ -273,38 +333,6 @@ private double deadband(double in, double band) {
         break;
       }
     }
-    driverInputMode = c_inputMode();
-
-    double left = 0;
-    double right = 0;
-    switch (driverInputMode) {
-      case TANK:
-        left = c_leftthrottle();
-        right = c_rightthrottle();
-        break;
-      case ARCADE:
-        left = c_speed()+c_steer();
-        right = c_speed()-c_steer();
-        break;
-      default:
-        left = 0;
-        right = 0;
-        break;
-    }
-    leftspeed(left);
-    rightspeed(right);
-  }
-
-
-//
-//   ###   ####   #      #####  
-//    #    #   #  #      #      
-//    #    #   #  #      ####   
-//    #    #   #  #      #      
-//   ###   ####   #####  #####  
-//
-//  does everything necessary when the robot is running, either enabled or disabled
-  public void idle() {
     switch (motorBrakeMode) {
       case BRAKE:
         SmartDashboard.putString("brake mode", "BRAKE");
@@ -313,6 +341,8 @@ private double deadband(double in, double band) {
         SmartDashboard.putString("brake mode", "COAST");
         break;
     }
+    
+    driverInputMode = c_inputMode();
     switch (driverInputMode) {
       case TANK:
         SmartDashboard.putString("drive mode", "TANK");

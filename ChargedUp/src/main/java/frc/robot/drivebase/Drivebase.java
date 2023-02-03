@@ -19,13 +19,17 @@
 
 package frc.robot.drivebase;
 
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import com.kauailabs.navx.frc.AHRS;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 import frc.robot.config.*;
 
 
@@ -47,6 +51,8 @@ public class Drivebase {
 //  global variables
     XboxController control;
 
+    AHRS ahrs;
+
     CANSparkMax motor_left1;
     CANSparkMax motor_left2;
     CANSparkMax motor_left3;
@@ -65,7 +71,11 @@ public class Drivebase {
     DriverInputModeType driverInputMode = DriverInputModeType.ARCADE;
     int autodrive_target = 0;
     boolean autodrive_active = false;
+    int autoturn_target = 0;
+    boolean autoturn_active = false;
     PIDController drive_pid = new PIDController(config.kP_drive, config.kI_drive, config.kD_drive);
+    PIDController turn_pid = new PIDController(config.kP_turn, config.kI_turn, config.kD_turn);
+    
   
 
     // test mode //
@@ -196,7 +206,8 @@ private double deadband(double in, double band) {
     // degrees per count is computed from robot wheel size, wheelbase, gearbox ratio, and encoder counts per motor revolution
     // raw robot direction is difference between left and right side raw values
     double dirRaw = (odoleft()-odoright());
-    return (dirRaw - directionOrigin) * config.kk_degreesPerCount;
+    // return (dirRaw - directionOrigin) * config.kk_degreesPerCount;
+    return ahrs.getAngle();
   }
 // reset the direction to zero
   private void directionReset() {
@@ -219,6 +230,12 @@ private double deadband(double in, double band) {
     autodrive_active = true;
   }
 
+  public void turn(int direction) {
+    directionReset();
+    autoturn_target = direction;
+    autoturn_active = true;
+  }
+
   public boolean stopped() {
     return !autodrive_active;
   }
@@ -231,6 +248,7 @@ private double deadband(double in, double band) {
     CANSparkMax motor = new CANSparkMax(canID, MotorType.kBrushless);
     motor.setIdleMode(IdleMode.kBrake);
     motor.setInverted(isInverted);
+    motor.burnFlash();
     return motor;
   }
 
@@ -246,6 +264,8 @@ private double deadband(double in, double band) {
   public Drivebase(XboxController driverControl) {
     // initialize
     control = driverControl;
+
+    ahrs = new AHRS(SPI.Port.kMXP);
 
     motor_left1 = newNEO(config.kmc_left1, config.kk_leftinvert);
     motor_left2 = newNEO(config.kmc_left2, config.kk_leftinvert);
@@ -289,7 +309,18 @@ private double deadband(double in, double band) {
       autodrive_active = false;
     }
     if (autodrive_active) {
+      if (drive_pid.atSetpoint()) {
+        autodrive_active = false;
+      }
       left = right = drive_pid.calculate(distance(), autodrive_target);
+    }
+    if (autoturn_active) {
+      if (turn_pid.atSetpoint()) {
+        autoturn_active = false;
+      }
+      double rudder = turn_pid.calculate(direction(), autoturn_target);
+      left = left - rudder;
+      right = right + rudder;
     }
     leftspeed(left);
     rightspeed(right);

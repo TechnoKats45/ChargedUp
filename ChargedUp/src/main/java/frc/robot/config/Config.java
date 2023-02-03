@@ -23,6 +23,10 @@ public class Config {
   public final double kI_drive = 0;
   public final double kD_drive = 0;
 
+  public final double kP_turn = 0;
+  public final double kI_turn = 0;
+  public final double kD_turn = 0;
+
   public final double kk_inchesPerCount = (
     kk_wheeldiameter /* inch */ / 1.0 /* diameter */
   * 3.14159 /* diameter */ / 1.0 /* circumference */

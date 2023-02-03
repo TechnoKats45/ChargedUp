@@ -21,6 +21,8 @@ package frc.robot.autonomous;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.*;
 
 import frc.robot.drivebase.*;
 import frc.robot.arm.*;
@@ -30,10 +32,6 @@ import frc.robot.gripper.*;
 
 public class Autonomous {
 
-  // controllers
-  // actuators
-  // sensors
-  // communication
 
 //   ###   #       ###   ####    ###   #       ####  
 //  #      #      #   #  #   #  #   #  #      #      
@@ -43,98 +41,265 @@ public class Autonomous {
 //
 //  global variables
 
-private static final String kDefault = "Default"; // 0
-private static final String kCustom = "Custom";
-private static final String kLeave = "Leave"; // 1
-private static final String kScoreLeave = "Score & Leave"; // 2
-private static final String kScoreLeaveScoresamerow = "Score & Leave & Score same row"; // 3
-private static final String kScoreLeaveScoredifferent = "Score & Leave & Score different row"; // 4
-private static final String kScoreDocked = "Score & Docked"; // 5
-private static final String kScoreLeaveDocked = "Score & Leave & Docked"; // 6
-private static final String kScoreLeaveScoreDocked = "Score & Leave & Score & Docked"; // 7
-private static final String kScoreLeaveScoreScoresamerow = "Score & Leave & Score & Score same row"; // 8
-private static final String kScoreLeaveScoreScoredifferent = "Score & Leave & Score & Score differnt row"; // 9
+private static final String autoDefault = "Default"; // 0
+private static final String autoCustom = "Custom";
+private static final String autoLeav = "Leave"; // 1
+private static final String autoScorLeav = "Score > Leave"; // 2
+private static final String autoScorLeavScorsame = "Score > Leave > Score same row"; // 3
+private static final String autoScorLeavScordiff = "Score > Leave > Score different row"; // 4
+private static final String autoScorDock = "Score > Docked"; // 5
+private static final String autoScorLeavDock = "Score > Leave > Docked"; // 6
+private static final String autoScorLeavScorDock = "Score > Leave > Score > Docked"; // 7
+private static final String autoScorLeavScorScorsame = "Score > Leave > Score > Score same row"; // 8
+private static final String autoScorLeavScorScordiff = "Score > Leave > Score > Score different row"; // 9
 
 private final SendableChooser<String> m_chooser = new SendableChooser<>();  
+private Alliance alliance = Alliance.Invalid;
+private String mode = "";
+private String state = "";
 
 private Drivebase drivebase;
 private Arm arm;
 private Gripper gripper;
-private String mode = "";
-private String state = "";
 
+//
+//  #####  #   #  #   #   ###   #####   ###    ###   #   #   ####
+//  #      #   #  ##  #  #   #    #      #    #   #  ##  #  #
+//  ####   #   #  # # #  #        #      #    #   #  # # #   ###
+//  #      #   #  #  ##  #   #    #      #    #   #  #  ##      #
+//  #       ###   #   #   ###     #     ###    ###   #   #  ####
+//
 private void setstate(String p_state) {
   state = p_state;
   SmartDashboard.putString("auto state",state);
 }
 
-
 //
-//  ####    ###   #   #  #####   ###   #   #  #####   ####
-//  #   #  #   #  #   #    #      #    ##  #  #      #
-//  ####   #   #  #   #    #      #    # # #  ####    ###
-//  #   #  #   #  #   #    #      #    #  ##  #          #
-//  #   #   ###    ###     #     ###   #   #  #####  ####
+//   ###   #   #  #####   ###          ####   #####  #####   ###   #   #  #      #####
+//  #   #  #   #    #    #   #         #   #  #      #      #   #  #   #  #        #
+//  #####  #   #    #    #   #         #   #  ####   ####   #####  #   #  #        #
+//  #   #  #   #    #    #   #         #   #  #      #      #   #  #   #  #        #
+//  #   #   ###     #     ###          ####   #####  #      #   #   ###   #####    #
 //
-//  public functions for autonomous input
-
+// Autonomous: do nothing
 private void doDefault() {
-  // do nothing
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
+//
+//   ###   #   #  #####   ###           ###   #   #   ####  #####   ###   #   #
+//  #   #  #   #    #    #   #         #   #  #   #  #        #    #   #  ## ##
+//  #####  #   #    #    #   #         #      #   #   ###     #    #   #  # # #
+//  #   #  #   #    #    #   #         #   #  #   #      #    #    #   #  #   #
+//  #   #   ###     #     ###           ###    ###   ####     #     ###   #   #
+//
+// Autonomous: work in progress
 private void doCustom() {
   switch (state) {
     case "Start":
-      drivebase.drive(-60);
-      setstate("Driving");
+      drivebase.drive(48);
+      setstate("Forward");
       break;
-   case "Driving":
+   case "Forward":
+      if (drivebase.stopped()) {
+        drivebase.turn(90);
+        setstate("Turn Right");
+      }
+      break;
+    case "Turn Right":
+      if (drivebase.stopped()) {
+        drivebase.drive(24);
+        setstate("Drive Right");
+      }
+      break;
+    case "Drive Right":
+      if (drivebase.stopped()) {
+        drivebase.turn(90);
+        setstate("Turn Back");
+      }
+      break;
+    case "Turn Back":
+      if (drivebase.stopped()) {
+        drivebase.drive(48);
+        setstate("Back");
+      }
+    case "Back":
       if (drivebase.stopped()) {
         setstate("End");
       }
-      break;
     case "End":
       break;
     default:
-      setstate ("End");
+      setstate ("Error");
       break;  
   }
 }
 
-private void doLeave() {
-
+//
+//   ###   #   #  #####   ###          #      #####
+//  #   #  #   #    #    #   #         #      #
+//  #####  #   #    #    #   #         #      ####
+//  #   #  #   #    #    #   #         #      #
+//  #   #   ###     #     ###          #####  #####
+//
+// Autonomous: Leave
+private void doLeav() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
+}
+//
+//   ###   #   #  #####   ###           ####   ###          #      #####
+//  #   #  #   #    #    #   #         #      #   #         #      #
+//  #####  #   #    #    #   #          ###   #             #      ####
+//  #   #  #   #    #    #   #             #  #   #         #      #
+//  #   #   ###     #     ###          ####    ###          #####  #####
+//
+// Autonomous: Score, Leave
+private void doScorLeav() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
-private void doScoreLeave() {
-
+//
+//   ###   #   #  #####   ###           ####   ###          #      #####          ####   ####
+//  #   #  #   #    #    #   #         #      #   #         #      #             #      #
+//  #####  #   #    #    #   #          ###   #             #      ####           ###    ###
+//  #   #  #   #    #    #   #             #  #   #         #      #                 #      #
+//  #   #   ###     #     ###          ####    ###          #####  #####         ####   ####
+//
+// Autonomous: Score, Leave, Score same row
+private void doScorLeavScorsame() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
-private void doScoreLeaveScoresamerow() {
-
+//
+//   ###   #   #  #####   ###           ####   ###          #      #####          ####  ####
+//  #   #  #   #    #    #   #         #      #   #         #      #             #      #   #
+//  #####  #   #    #    #   #          ###   #             #      ####           ###   #   #
+//  #   #  #   #    #    #   #             #  #   #         #      #                 #  #   #
+//  #   #   ###     #     ###          ####    ###          #####  #####         ####   ####
+//
+// Autonomous: Score, Leave, Score different row
+private void doScorLeavScordiff() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
-private void doScoreLeaveScoredifferent() {
-
+//
+//   ###   #   #  #####   ###           ####   ###          ####    ###
+//  #   #  #   #    #    #   #         #      #   #         #   #  #   #
+//  #####  #   #    #    #   #          ###   #             #   #  #   #
+//  #   #  #   #    #    #   #             #  #   #         #   #  #   #
+//  #   #   ###     #     ###          ####    ###          ####    ###
+//
+// Autonomous: Score, Dock
+private void doScorDock() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
-private void doScoreDocked() {
-
+//
+//   ###   #   #  #####   ###           ####   ###          #      #####         ####    ###
+//  #   #  #   #    #    #   #         #      #   #         #      #             #   #  #   #
+//  #####  #   #    #    #   #          ###   #             #      ####          #   #  #   #
+//  #   #  #   #    #    #   #             #  #   #         #      #             #   #  #   #
+//  #   #   ###     #     ###          ####    ###          #####  #####         ####    ###
+//
+// Autonomous: Score, Leave, Dock
+private void doScorLeavDock() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
-private void doScoreLeaveDocked() {
-
+//
+//   ###   #   #  #####   ###           ####   ###          #      #####          ####   ###          ####    ###
+//  #   #  #   #    #    #   #         #      #   #         #      #             #      #   #         #   #  #   #
+//  #####  #   #    #    #   #          ###   #             #      ####           ###   #             #   #  #   #
+//  #   #  #   #    #    #   #             #  #   #         #      #                 #  #   #         #   #  #   #
+//  #   #   ###     #     ###          ####    ###          #####  #####         ####    ###          ####    ###
+//
+// Autonomous: Score, Leave, Score, Dock
+private void doScorLeavScorDock() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
-private void doScoreLeaveScoreDocked() {
-
+//
+//   ###   #   #  #####   ###           ####   ###          #      #####          ####   ###           ####   ####
+//  #   #  #   #    #    #   #         #      #   #         #      #             #      #   #         #      #
+//  #####  #   #    #    #   #          ###   #             #      ####           ###   #              ###    ###
+//  #   #  #   #    #    #   #             #  #   #         #      #                 #  #   #             #      #
+//  #   #   ###     #     ###          ####    ###          #####  #####         ####    ###          ####   ####
+//
+// Autonomous: Score, Leave, Score, Score same row
+private void doScorLeavScorScorsame() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
-private void doScoreLeaveScoreScoresamerow() {
-
-}
-
-private void doScoreLeaveScoreScoredifferent() {
-
+//
+//   ###   #   #  #####   ###           ####   ###          #      #####          ####   ###           ####  ####
+//  #   #  #   #    #    #   #         #      #   #         #      #             #      #   #         #      #   #
+//  #####  #   #    #    #   #          ###   #             #      ####           ###   #              ###   #   #
+//  #   #  #   #    #    #   #             #  #   #         #      #                 #  #   #             #  #   #
+//  #   #   ###     #     ###          ####    ###          #####  #####         ####    ###          ####   ####
+//
+// Autonomous: Score, Leave, Score, Score different row
+private void doScorLeavScorScordiff() {
+  switch (state) {
+    case "Start":
+    case "End":
+    default:
+      setstate ("Error");
+      break;
+  }
 }
 
 //
@@ -144,35 +309,54 @@ private void doScoreLeaveScoreScoredifferent() {
 //  #   #  #   #  #  ##      #    #    #   #  #   #  #   #    #    #   #  #   #
 //   ###    ###   #   #  ####     #    #   #   ###    ###     #     ###   #   #
 //
-//  creates a new Subsystem 
+//  creates the Autonomous object 
+
+// auto routine chooser: add option to list of choices and set it as default
+  private void menuOptionDefault (String option) {
+    m_chooser.setDefaultOption(option, option);
+  }
+// auto routine chooser: add option to list of choices
+  private void menuOption (String option) {
+    m_chooser.addOption(option, option);
+  }
 
   public Autonomous(Drivebase p_drivebase, Arm p_arm, Gripper p_gripper) {
-    // initialize
+    // subsystems
     drivebase = p_drivebase;
     arm = p_arm;
     gripper = p_gripper;
-    // initialize
-    m_chooser.setDefaultOption("Default Auto", kDefault);
-    m_chooser.addOption("Custom Auto", kCustom);
-    m_chooser.addOption(kLeave,kLeave);
-    m_chooser.addOption(kScoreLeave,kScoreLeave);
-    m_chooser.addOption(kScoreLeaveScoresamerow,kScoreLeaveScoreScoresamerow);
-    m_chooser.addOption(kScoreLeaveScoredifferent,kScoreLeaveScoredifferent);
-    m_chooser.addOption(kScoreDocked,kScoreDocked);
-    m_chooser.addOption(kScoreLeaveDocked,kScoreLeaveDocked);
-    m_chooser.addOption(kScoreLeaveScoreDocked,kScoreLeaveScoreDocked);
-    m_chooser.addOption(kScoreLeaveScoreScoresamerow,kScoreLeaveScoresamerow);
-    m_chooser.addOption(kScoreLeaveScoreScoredifferent,kScoreLeaveScoreScoredifferent);
-    SmartDashboard.putData("Auto choices", m_chooser);
+
+    // populate auto routine chooser
+    menuOptionDefault(autoDefault);
+    menuOption(autoCustom);
+    menuOption(autoLeav);
+    menuOption(autoScorLeav);
+    menuOption(autoScorLeavScorsame);
+    menuOption(autoScorLeavScordiff);
+    menuOption(autoScorDock);
+    menuOption(autoScorLeavDock);
+    menuOption(autoScorLeavScorDock);
+    menuOption(autoScorLeavScorsame);
+    menuOption(autoScorLeavScorScordiff);
+    SmartDashboard.putData("Auto choice", m_chooser);
 
   }
 
+//
+//   ###   #   #   ###   #####   ###    ###   #       ###   #####  #####
+//    #    ##  #    #      #      #    #   #  #        #       #   #
+//    #    # # #    #      #      #    #####  #        #      #    ####
+//    #    #  ##    #      #      #    #   #  #        #     #     #
+//   ###   #   #   ###     #     ###   #   #  #####   ###   #####  #####
+//
   public void init() {
+    alliance = DriverStation.getAlliance();
     mode = m_chooser.getSelected();
     SmartDashboard.putString("auto mode", mode);
     System.out.println("Auto selected: " + mode);
     setstate("Start");
   }
+
 
 //
 //  ####   #   #  #   #
@@ -181,48 +365,49 @@ private void doScoreLeaveScoreScoredifferent() {
 //  #   #  #   #  #  ##
 //  #   #   ###   #   #
 //
-//  does everything necessary when the robot is enabled, either autonomous or teleoperated
+//  dispatch to appropriate function for the selected mode
   public void run() {
-    SmartDashboard.putString("auto state", mode+" "+state);
+    SmartDashboard.putString("auto state", state);
     switch (mode) {
-        case kCustom:
+        case autoCustom:
+          // custom routine
           doCustom();
-          // Put custom auto code here
           break;
-        case kLeave:
-          doLeave();
+        case autoLeav:
+          doLeav();
           break;
-        case kScoreLeave:
-          doScoreLeave();
+        case autoScorLeav:
+          doScorLeav();
           break;
-        case kScoreLeaveScoresamerow:
-          doScoreLeaveScoresamerow();
+        case autoScorLeavScorsame:
+          doScorLeavScorsame();
           break;
-        case kScoreLeaveScoredifferent:
-          doScoreLeaveScoredifferent();
+        case autoScorLeavScordiff:
+          doScorLeavScordiff();
           break;
-        case kScoreDocked:
-          doScoreDocked();
+        case autoScorDock:
+          doScorDock();
           break;
-        case kScoreLeaveDocked:
-          doScoreLeaveDocked();
+        case autoScorLeavDock:
+          doScorLeavDock();
           break;
-        case kScoreLeaveScoreDocked:
-          doScoreLeaveScoreDocked();
+        case autoScorLeavScorDock:
+          doScorLeavScorDock();
           break;
-        case kScoreLeaveScoreScoresamerow:
-          doScoreLeaveScoreScoresamerow();
+        case autoScorLeavScorScorsame:
+          doScorLeavScorScorsame();
           break;
-        case kScoreLeaveScoreScoredifferent:
-          doScoreLeaveScoreScoredifferent();
+        case autoScorLeavScorScordiff:
+          doScorLeavScorScordiff();
           break;
-        case kDefault:
+        case autoDefault:
         default:
-          // Put default auto code here
+          // default routine is expected to do nothing
           doDefault();
           break;
-      }
+    }
   }
+
 
 // end of Autonomous class
 }

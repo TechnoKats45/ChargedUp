@@ -63,8 +63,6 @@ public class Config {
 // PWM motor control IDs
 // -- arm --
 public final int kmp_slide = 0;
-// -- gripper --
-public final int kmp_rotate = 1;
 
 // Pneumatic control IDs
 public final int kpd_grab_in = 0;

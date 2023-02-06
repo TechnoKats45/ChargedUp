@@ -25,6 +25,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.Joystick;
 //import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.config.*;
 //  imports (controllers, actuators, sensors, communication)
 
@@ -153,6 +154,7 @@ void slide(double speed) {
 //  does everything necessary when the robot is enabled, either autonomous or teleoperated
   public void run() {
     if (c_enable()) {
+        SmartDashboard.putBoolean("arm enable", true);
 
         if(c_extend()){
             extend(0.5);
@@ -170,13 +172,14 @@ void slide(double speed) {
     }
     
     else{
+        SmartDashboard.putBoolean("arm enable", false);
         elevate(0);
         slide(0);
         extend(0);
     }
     
     
-  }
+  } 
 
 
 //

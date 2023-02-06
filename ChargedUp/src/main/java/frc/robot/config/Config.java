@@ -19,12 +19,12 @@ public class Config {
   public final double kk_wheelbase = 18.0;
   public final double kk_slipfactor = 0.8;
 
-  public final double kP_drive = 0;
-  public final double kI_drive = 0;
+  public final double kP_drive = 0.005;
+  public final double kI_drive = 0.001;
   public final double kD_drive = 0;
 
-  public final double kP_turn = 0;
-  public final double kI_turn = 0;
+  public final double kP_turn = 0.002;
+  public final double kI_turn = 0.001;
   public final double kD_turn = 0;
 
   public final double kk_inchesPerCount = (

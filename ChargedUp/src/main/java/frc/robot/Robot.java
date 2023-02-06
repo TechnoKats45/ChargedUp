@@ -4,11 +4,9 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Joystick;
 import frc.robot.drivebase.*;
 import frc.robot.arm.*;
 import frc.robot.gripper.*;
@@ -45,7 +43,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     drivebase.idle();
-    //arm.idle();
+    arm.idle();
     //gripper.idle();
   }
 
@@ -68,7 +66,10 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousPeriodic() {
     autonomous.run();
-  }
+    drivebase.run();
+    arm.run();
+    //gripper.run();
+ }
 
   /** This function is called once when teleop is enabled. */
   @Override
@@ -78,7 +79,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     drivebase.run();
-    //arm.run();
+    arm.run();
     //gripper.run();
   }
   /** This function is called once when the robot is disabled. */

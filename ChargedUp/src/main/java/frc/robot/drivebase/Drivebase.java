@@ -146,6 +146,38 @@ private double deadband(double in, double band) {
     return motorBrakeMode;
   }
 
+// update drive pid gains
+private void c_update_drive_pid() {
+  double kP_drive = SmartDashboard.getNumber("kP drive",config.kP_drive);
+  double kI_drive = SmartDashboard.getNumber("kI drive",config.kI_drive);
+  double kD_drive = SmartDashboard.getNumber("kD drive",config.kD_drive);
+  if (kP_drive != drive_pid.getP()) {
+    drive_pid.setP(kP_drive);
+  }
+  if (kI_drive != drive_pid.getI()) {
+    drive_pid.setI(kI_drive);
+  }
+  if (kD_drive != drive_pid.getD()) {
+    drive_pid.setD(kD_drive);
+  }
+}
+
+// update turn pid gains
+private void c_update_turn_pid() {
+  double kP_turn = SmartDashboard.getNumber("kP turn",config.kP_turn);
+  double kI_turn = SmartDashboard.getNumber("kI turn",config.kI_turn);
+  double kD_turn = SmartDashboard.getNumber("kD turn",config.kD_turn);
+  if (kP_turn != turn_pid.getP()) {
+    turn_pid.setP(kP_turn);
+  }
+  if (kI_turn != turn_pid.getI()) {
+    turn_pid.setI(kI_turn);
+  }
+  if (kD_turn != turn_pid.getD()) {
+    turn_pid.setD(kD_turn);
+  }
+}
+
 //
 //   ###    ###   #####  #   #   ###   #####  #####  
 //  #   #  #   #    #    #   #  #   #    #    #      
@@ -205,13 +237,14 @@ private double deadband(double in, double band) {
   private double direction() {
     // degrees per count is computed from robot wheel size, wheelbase, gearbox ratio, and encoder counts per motor revolution
     // raw robot direction is difference between left and right side raw values
-    double dirRaw = (odoleft()-odoright());
+    // double dirRaw = (odoleft()-odoright());
     // return (dirRaw - directionOrigin) * config.kk_degreesPerCount;
-    return ahrs.getAngle();
+    return ahrs.getAngle() - directionOrigin;
   }
 // reset the direction to zero
   private void directionReset() {
-    directionOrigin = (odoleft()-odoright());
+//    directionOrigin = (odoleft()-odoright());
+    directionOrigin = ahrs.getAngle();
   }
 
 
@@ -225,13 +258,21 @@ private double deadband(double in, double band) {
 //  public functions for autonomous control
 
   public void drive(int distance) {
+    SmartDashboard.putNumber("drive target", distance);
     distanceReset();
+    drive_pid.reset();
+    drive_pid.setSetpoint(distance);
+    drive_pid.setTolerance(1);
     autodrive_target = distance;
     autodrive_active = true;
   }
 
   public void turn(int direction) {
+    SmartDashboard.putNumber("turn target", direction);
     directionReset();
+    turn_pid.reset();
+    turn_pid.setSetpoint(direction);
+    turn_pid.setTolerance(1);
     autoturn_target = direction;
     autoturn_active = true;
   }
@@ -276,6 +317,14 @@ private double deadband(double in, double band) {
 
     distanceReset();
     directionReset();
+    
+    SmartDashboard.putNumber("kP drive",drive_pid.getP());
+    SmartDashboard.putNumber("kI drive",drive_pid.getI());
+    SmartDashboard.putNumber("kD drive",drive_pid.getD());
+    SmartDashboard.putNumber("kP turn",turn_pid.getP());
+    SmartDashboard.putNumber("kI turn",turn_pid.getI());
+    SmartDashboard.putNumber("kD turn",turn_pid.getD());
+
   }
 
 
@@ -307,20 +356,23 @@ private double deadband(double in, double band) {
     }
     if ((left != 0) | (right != 0)) {
       autodrive_active = false;
+      autoturn_active = false;
     }
     if (autodrive_active) {
+      double throttle = drive_pid.calculate(distance(), autodrive_target);
       if (drive_pid.atSetpoint()) {
         autodrive_active = false;
       }
-      left = right = drive_pid.calculate(distance(), autodrive_target);
+      left = throttle;
+      right = throttle;
     }
     if (autoturn_active) {
+      double rudder = turn_pid.calculate(direction(), autoturn_target);
       if (turn_pid.atSetpoint()) {
         autoturn_active = false;
       }
-      double rudder = turn_pid.calculate(direction(), autoturn_target);
-      left = left - rudder;
-      right = right + rudder;
+      left = left + rudder;
+      right = right - rudder;
     }
     leftspeed(left);
     rightspeed(right);
@@ -386,6 +438,9 @@ private double deadband(double in, double band) {
     SmartDashboard.putNumber("odo right raw", odoright());
     SmartDashboard.putNumber("db distance", distance());
     SmartDashboard.putNumber("db direction", direction());
+    
+    SmartDashboard.putBoolean("auto drive", autodrive_active);
+    SmartDashboard.putBoolean("auto turn", autoturn_active);
   }
 
 
@@ -397,6 +452,23 @@ private double deadband(double in, double band) {
 //    #    #####  ####     #
 //
 //  provides special support for testing individual subsystem functionality
+
+/* exercise auto_drive and auto_turn functions */
+  public void test() {
+    if (control.getStartButtonPressed()) {
+      switch (control.getPOV()) {
+        case 0: drive(48); break;
+        case 90: turn(90); break;
+        case 180: drive(-48); break;
+        case 270: turn(-90); break;
+      }
+    }
+    c_update_drive_pid();
+    c_update_turn_pid();
+    run();
+  }
+
+/* run motors without constant driver joystick command
   public void test() {
     if (control.getAButton()) {
       test_speed = control.getRightTriggerAxis() - control.getLeftTriggerAxis();
@@ -422,6 +494,7 @@ private double deadband(double in, double band) {
       rightspeed(0);
     }
   }
+*/
 
 // end of Drivebase class
 }

@@ -226,7 +226,7 @@ private void c_update_turn_pid() {
   private double distance() {
     // raw robot odometer is average of left and right side raw values
     double odoRaw = (odoleft()+odoright())/2.0;
-    return (odoRaw - odometerOrigin) * config.kk_inchesPerCount;
+    return (odoRaw - odometerOrigin) * config.kk_WheelInchesPerCount;
   }
   // reset the odometer to zero
   private void distanceReset() {
@@ -238,7 +238,7 @@ private void c_update_turn_pid() {
     // degrees per count is computed from robot wheel size, wheelbase, gearbox ratio, and encoder counts per motor revolution
     // raw robot direction is difference between left and right side raw values
     // double dirRaw = (odoleft()-odoright());
-    // return (dirRaw - directionOrigin) * config.kk_degreesPerCount;
+    // return (dirRaw - directionOrigin) * config.kk_TurnDegreesPerCount;
     return ahrs.getAngle() - directionOrigin;
   }
 // reset the direction to zero

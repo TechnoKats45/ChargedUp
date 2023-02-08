@@ -46,6 +46,12 @@ public class Config {
   );
 
   // arm parameters
+   public final double kk_extensionmin = 0;
+   public final double kk_extensionmax = 19.5;
+ 
+   public final double kk_elevationmin = -90;
+   public final double kk_elevationmax = 90;
+
   public final double kP_elevation = 0.005;
   public final double kI_elevation = 0.001;
   public final double kD_elevation = 0;

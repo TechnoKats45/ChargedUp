@@ -19,9 +19,6 @@
 
 package frc.robot.arm;
 
-import java.sql.ResultSet;
-
-import org.ejml.data.ElementLocation;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -64,6 +61,7 @@ PIDController slide_pid = new PIDController(config.kP_slide, config.kI_slide, co
 PIDController extension_pid = new PIDController(config.kP_extension, config.kI_extension, config.kD_extension);
 
 double extension_target = 0;
+double elevation_target = 0;
 
 //
 //   ###    ###   #   #  #####  ####    ###   #      
@@ -75,19 +73,19 @@ double extension_target = 0;
 //  private functions for driver/operator input
 
 boolean c_extend(){
-    return control.getRawButton(3);
-}
-
-boolean c_retract(){
     return control.getRawButton(2);
 }
 
+boolean c_retract(){
+    return control.getRawButton(1);
+}
+
 boolean c_left(){
-    return control.getRawButton(4);
+    return control.getRawButton(3);
 }
 
 boolean c_right(){
-    return control.getRawButton(5);
+    return control.getRawButton(4);
 }
 
 double c_elevate(){
@@ -99,12 +97,48 @@ boolean c_enable(){
 }
 
 boolean c_resetangle(){
-    return control.getRawButton(9);
+    return control.getRawButton(7);
 }
 
 boolean c_resetextension() {
-    return control.getRawButton(10);
+    return control.getRawButton(8);
 }
+double c_throttle() {
+    return (control.getThrottle() + 1) / 2.0;
+} 
+
+// update elevation pid gains
+private void c_update_elevation_pid() {
+    double kP_elevation = SmartDashboard.getNumber("kP elevation",config.kP_elevation);
+    double kI_elevation = SmartDashboard.getNumber("kI turn",config.kI_elevation);
+    double kD_elevation = SmartDashboard.getNumber("kD elevation",config.kD_elevation);
+    if (kP_elevation != elevation_pid.getP()) {
+      elevation_pid.setP(kP_elevation);
+    }
+    if (kI_elevation != elevation_pid.getI()) {
+      elevation_pid.setI(kI_elevation);
+    }
+    if (kD_elevation != elevation_pid.getD()) {
+      elevation_pid.setD(kD_elevation);
+    }
+  }
+
+  // update extension pid gains
+private void c_update_extension_pid() {
+    double kP_extension = SmartDashboard.getNumber("kP extension",config.kP_extension);
+    double kI_extension = SmartDashboard.getNumber("kI extension",config.kI_extension);
+    double kD_extension = SmartDashboard.getNumber("kD extension",config.kD_extension);
+    if (kP_extension != extension_pid.getP()) {
+      extension_pid.setP(kP_extension);
+    }
+    if (kI_extension != extension_pid.getI()) {
+      extension_pid.setI(kI_extension);
+    }
+    if (kD_extension != extension_pid.getD()) {
+      extension_pid.setD(kD_extension);
+    }
+  }
+
 
 //
 //   ###    ###   #####  #   #   ###   #####  #####  
@@ -181,12 +215,21 @@ private double slideinches() {
      // initialize
      control = userController;
      elevationmotor = new CANSparkMax(config.kmc_elevate, MotorType.kBrushless);
+     elevationmotor.setInverted(true);
      elevationmotor.setIdleMode(IdleMode.kBrake);
      anglereset(0);
      slidemotor = new Spark(config.kmp_slide);
      extensionmotor = new CANSparkMax(config.kmc_extend, MotorType.kBrushless);
      extensionmotor.setIdleMode(IdleMode.kCoast);
      inchesreset(0);
+
+     SmartDashboard.putNumber("kP elev",elevation_pid.getP());
+     SmartDashboard.putNumber("kI elev",elevation_pid.getI());
+     SmartDashboard.putNumber("kD elev",elevation_pid.getD());
+     SmartDashboard.putNumber("kP ext",extension_pid.getP());
+     SmartDashboard.putNumber("kI ext",extension_pid.getI());
+     SmartDashboard.putNumber("kD ext",extension_pid.getD());
+ 
      
   }
 
@@ -206,7 +249,9 @@ private double slideinches() {
         inchesreset(0); 
     }
     double extend = extension_pid.calculate(extensioninches(), extension_target);
-
+    double elevate = elevation_pid.calculate(elevationangle(), elevation_target);
+    extensionmotor.set(extend);
+    elevationmotor.set(elevate);
 
     // set arm slide to make it line up with vision target
   } 
@@ -256,10 +301,26 @@ public void test() {
     
     else{
         SmartDashboard.putBoolean("arm enable", false);
-        elevate(0);
+        if (c_left()){
+            c_update_elevation_pid();
+            elevation_target = c_throttle() * (config.kk_elevationmax - config.kk_elevationmin) + config.kk_elevationmin;
+            run();
+        } else {
+            elevate(0);  
+        }
+        if (c_right()){
+            c_update_extension_pid();
+            extension_target = c_throttle() * (config.kk_extensionmax - config.kk_extensionmin) + config.kk_extensionmin;
+            run();
+        } else {
+            extend(0);
+
+        }
+        
         slide(0);
-        extend(0);
     }
+
+
 }
 
 // end of Arm class

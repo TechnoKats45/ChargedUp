@@ -23,10 +23,11 @@ package frc.robot.arm;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import edu.wpi.first.math.controller.PIDController;
+import com.revrobotics.SparkMaxLimitSwitch;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
-//import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.config.*;
@@ -53,6 +54,13 @@ Spark slidemotor;
 CANSparkMax extensionmotor;
 private Config config = new Config();
 
+private SparkMaxLimitSwitch elevation_forwardLimit;
+private SparkMaxLimitSwitch elevation_reverseLimit;
+private SparkMaxLimitSwitch extension_nearLimit;
+private SparkMaxLimitSwitch extension_farLimit;
+private DigitalInput slide_leftLimit;
+private DigitalInput slide_rightLimit;
+
 double angleOrigin = 0;
 double inchesOrigin = 0;
 
@@ -72,46 +80,46 @@ double elevation_target = 0;
 //
 //  private functions for driver/operator input
 
-boolean c_extend(){
-    return control.getRawButton(2);
+boolean c_extend() { // extend arm
+    return control.getRawButton(config.kj_up);
 }
 
-boolean c_retract(){
-    return control.getRawButton(1);
+boolean c_retract() { // retract arm
+    return control.getRawButton(config.kj_down);
 }
 
-boolean c_left(){
-    return control.getRawButton(3);
+boolean c_left() { // slide arm left
+    return control.getRawButton(config.kj_left);
 }
 
-boolean c_right(){
-    return control.getRawButton(4);
+boolean c_right() { // slide arm right
+    return control.getRawButton(config.kj_right);
 }
 
-double c_elevate(){
+double c_elevate() { // elevation motor control
     return control.getY();
 }
 
-boolean c_enable(){
-    return control.getTrigger();
+boolean c_enable() { // enable manual arm control
+    return control.getRawButton(config.kj_trig);
 }
 
-boolean c_resetangle(){
-    return control.getRawButton(7);
+boolean c_resetangle() { // set elevation zero location (ideally straight up)
+    return control.getRawButton(config.kj_leftfar);
 }
 
-boolean c_resetextension() {
-    return control.getRawButton(8);
+boolean c_resetextension() { // set extension zero location (ideally fully retracted)
+    return control.getRawButton(config.kj_leftnear);
 }
-double c_throttle() {
+double c_throttle() { // scaled to be a value from 0 to 1
     return (control.getThrottle() + 1) / 2.0;
 } 
 
 // update elevation pid gains
 private void c_update_elevation_pid() {
-    double kP_elevation = SmartDashboard.getNumber("kP elevation",config.kP_elevation);
-    double kI_elevation = SmartDashboard.getNumber("kI turn",config.kI_elevation);
-    double kD_elevation = SmartDashboard.getNumber("kD elevation",config.kD_elevation);
+    double kP_elevation = SmartDashboard.getNumber("elevation/kP",config.kP_elevation);
+    double kI_elevation = SmartDashboard.getNumber("elevation/kI",config.kI_elevation);
+    double kD_elevation = SmartDashboard.getNumber("elevation/kD",config.kD_elevation);
     if (kP_elevation != elevation_pid.getP()) {
       elevation_pid.setP(kP_elevation);
     }
@@ -125,9 +133,9 @@ private void c_update_elevation_pid() {
 
   // update extension pid gains
 private void c_update_extension_pid() {
-    double kP_extension = SmartDashboard.getNumber("kP extension",config.kP_extension);
-    double kI_extension = SmartDashboard.getNumber("kI extension",config.kI_extension);
-    double kD_extension = SmartDashboard.getNumber("kD extension",config.kD_extension);
+    double kP_extension = SmartDashboard.getNumber("extension/kP",config.kP_extension);
+    double kI_extension = SmartDashboard.getNumber("extension/kI",config.kI_extension);
+    double kD_extension = SmartDashboard.getNumber("extension/kD",config.kD_extension);
     if (kP_extension != extension_pid.getP()) {
       extension_pid.setP(kP_extension);
     }
@@ -212,25 +220,33 @@ private double slideinches() {
 //  creates a new Subsystem 
 
   public Arm(Joystick userController) {
-     // initialize
-     control = userController;
-     elevationmotor = new CANSparkMax(config.kmc_elevate, MotorType.kBrushless);
-     elevationmotor.setInverted(true);
-     elevationmotor.setIdleMode(IdleMode.kBrake);
-     anglereset(0);
-     slidemotor = new Spark(config.kmp_slide);
-     extensionmotor = new CANSparkMax(config.kmc_extend, MotorType.kBrushless);
-     extensionmotor.setIdleMode(IdleMode.kCoast);
-     inchesreset(0);
+    // initialize
+    control = userController;
+    elevationmotor = new CANSparkMax(config.kmc_elevate, MotorType.kBrushless);
+    elevationmotor.setInverted(true);
+    elevationmotor.setIdleMode(IdleMode.kBrake);
+    elevation_forwardLimit = elevationmotor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+    elevation_reverseLimit = elevationmotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+    anglereset(0);
 
-     SmartDashboard.putNumber("kP elev",elevation_pid.getP());
-     SmartDashboard.putNumber("kI elev",elevation_pid.getI());
-     SmartDashboard.putNumber("kD elev",elevation_pid.getD());
-     SmartDashboard.putNumber("kP ext",extension_pid.getP());
-     SmartDashboard.putNumber("kI ext",extension_pid.getI());
-     SmartDashboard.putNumber("kD ext",extension_pid.getD());
- 
-     
+    slidemotor = new Spark(config.kmp_slide);
+    slide_leftLimit = new DigitalInput(config.kdi_slideleft);
+    slide_rightLimit = new DigitalInput(config.kdi_slideright);
+
+    extensionmotor = new CANSparkMax(config.kmc_extend, MotorType.kBrushless);
+    extensionmotor.setIdleMode(IdleMode.kCoast);
+    extension_farLimit = extensionmotor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+    extension_nearLimit = extensionmotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+    inchesreset(0);
+
+    SmartDashboard.putNumber("elevation/kP",elevation_pid.getP());
+    SmartDashboard.putNumber("elevation/kI",elevation_pid.getI());
+    SmartDashboard.putNumber("elevation/kD",elevation_pid.getD());
+    SmartDashboard.putNumber("extension/kP",extension_pid.getP());
+    SmartDashboard.putNumber("extension/kI",extension_pid.getI());
+    SmartDashboard.putNumber("extension/kD",extension_pid.getD());
+
+    
   }
 
 
@@ -266,9 +282,15 @@ private double slideinches() {
 //
 //  does everything necessary when the robot is running, either enabled or disabled
   public void idle() {
-    SmartDashboard.putNumber("Arm elevation", elevationangle());
-    SmartDashboard.putNumber("Arm extension", extensioninches());
-    SmartDashboard.putNumber("Arm slide", slideinches());
+    SmartDashboard.putNumber("elevation/angle", elevationangle());
+    SmartDashboard.putBoolean("elevation/fwd limit", elevation_forwardLimit.isPressed());
+    SmartDashboard.putBoolean("elevation/rev limit", elevation_reverseLimit.isPressed());
+    SmartDashboard.putNumber("extension/inches", extensioninches());
+    SmartDashboard.putBoolean("extension/near limit", extension_nearLimit.isPressed());
+    SmartDashboard.putBoolean("extension/far limit", extension_farLimit.isPressed());
+    SmartDashboard.putNumber("slide/inches", slideinches());
+    SmartDashboard.putBoolean("slide/left limit", slide_leftLimit.get());
+    SmartDashboard.putBoolean("slide/right limit", slide_rightLimit.get());
   }
 
   
@@ -286,9 +308,10 @@ public void test() {
 
         if(c_extend()){
             extend(0.5);
-        }
-        if(c_retract()){
+        } else if(c_retract()){
             extend(-0.5);
+        } else {
+            extend(0);
         }
         if(c_left()){
             slide(-0.5);

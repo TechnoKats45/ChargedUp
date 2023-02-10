@@ -13,6 +13,30 @@ package frc.robot.config;
 
 public class Config {
 
+// Logitech ATTACK 3 joystick button numbers
+public final int kj_1 = 0; 
+public final int kj_2 = 1; 
+public final int kj_3 = 2; 
+public final int kj_4 = 3; 
+public final int kj_5 = 4; 
+public final int kj_6 = 5; 
+public final int kj_7 = 6; 
+public final int kj_8 = 7; 
+public final int kj_9 = 8; 
+public final int kj_10 = 9; 
+public final int kj_11 = 10; 
+public final int kj_trig = kj_1; // trigger
+public final int kj_down = kj_2; // down
+public final int kj_up = kj_3; // up
+public final int kj_left = kj_4; // left
+public final int kj_right = kj_5; // right
+public final int kj_leftfar = kj_6; // left far
+public final int kj_leftnear = kj_7; // left near
+public final int kj_centerleft = kj_8; // center left
+public final int kj_centerright = kj_9; // center right
+public final int kj_rightnear = kj_10; // right near
+public final int kj_rightfar = kj_11; // right far
+
 // drivebase parameters
   public final double kk_wheeldiameter = 6;
   public final double kk_gearreduction = 7.56;
@@ -108,12 +132,8 @@ public final int kpd_grab_in = 0;
 public final int kpd_grab_out = 1;
 
 // Digital inputs
-public int kdi_armforward = 0;
-public int kdi_armbackward = 1;
-public int kdi_extendout = 2;
-public int kdi_extendin = 3;
-public int kdi_slideleft = 4;
-public int kdi_slideright = 5;
+public int kdi_slideleft = 0;
+public int kdi_slideright = 1;
 
 // Analog inputs
 public int kai_elevate = 0;

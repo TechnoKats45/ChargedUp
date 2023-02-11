@@ -1,3 +1,39 @@
+// TechnoKats Robotics Team - 2023 FRC season: CHARGED UP
+//
+//  ####    ###   ####    ###   #####  
+//  #   #  #   #  #   #  #   #    #    
+//  ####   #   #  ####   #   #    #    
+//  #   #  #   #  #   #  #   #    #    
+//  #   #   ###   ####    ###     #    
+//
+//  Robot object - based on TimedRobot
+//
+//  implements init() and periodic() functions:
+//    robotInit(), robotPeriodic()
+//    autonomousInit(), autonomousPeriodic()
+//    disabledInit(), disabledPeriodic()
+//    teleopInit(), teleopPeriodic()
+//    testInit(), testPeriodic()
+//  all implemented functions call the appropriate method of each subsystem's object
+//
+//  defines driver and operator controllers (gamepad, joystick, etc)
+//  and passes the controller to the appropriate subsystem so that multiple subsystems can use the same controller
+//
+//  instantiates an object for each subsystem:
+//    drivebase
+//    arm
+//    gripper
+//
+//  instantiates an autonomous object and passes it all of the subsystems to allow for autonomous control
+//
+//  each subsystem implements three required methods:
+//    idle() is called from robotPeriodic() and is intended for Dashboard telemetry
+//    run() is called from teleopPeriodic() and is intended for normal driver-controlled operation
+//    test() is called from testPeriodic() and is intended for testing of individual subsystem functions and softare debugging
+//  in addition each subsystem implements auto_() functions for the autonomous routines to call in order to control the subsystem
+//
+//
+
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -31,6 +67,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+    // all of the initialization functions are done in the constructor for each subsystem
   }
 
   /**
@@ -68,7 +105,7 @@ public class Robot extends TimedRobot {
     autonomous.run();
     drivebase.run();
     arm.run();
-    //gripper.run();
+    gripper.run();
  }
 
   /** This function is called once when teleop is enabled. */
@@ -80,8 +117,9 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     drivebase.run();
     arm.run();
-    //gripper.run();
+    gripper.run();
   }
+
   /** This function is called once when the robot is disabled. */
   @Override
   public void disabledInit() {}
@@ -99,7 +137,7 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
     drivebase.test();
     arm.test();
-    //gripper.test();
+    gripper.test();
   }
 
   /** This function is called once when the robot is first started up. */

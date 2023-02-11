@@ -1,4 +1,3 @@
-
 // TechnoKats Robotics Team - 2023 FRC season: CHARGED UP
 //
 //  ####   ####    ###   #   #  #####  ####    ###    ####  #####
@@ -7,40 +6,36 @@
 //  #   #  #   #    #     # #   #      #   #  #   #      #  #
 //  ####   #   #   ###     #    #####  ####   #   #  ####   #####
 //
-//  description
+//  Drivebase subsystem
 //
-//  notes
+//  left side and right side motors
+//  NavX accelerometer and "gyro" compass
 //
-//  warnings
-// 
-//  behavior
-//  actuators
-//  sensors
-
 package frc.robot.drivebase;
 
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.math.controller.PIDController;
+//  driver control is an Xbox gamepad
 import edu.wpi.first.wpilibj.XboxController;
+
+//  telemetry goes to the Dashboard for display
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import com.kauailabs.navx.frc.AHRS;
-
+//  drive motors are NEO brushless motors using SPARK MAX speed controllers  
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+//  NavX is plugged in to the roboRIO expansion port and uses SPI communication
+import edu.wpi.first.wpilibj.SPI;
+import com.kauailabs.navx.frc.AHRS;
+
+//  auto drive and steering uses PID control
+import edu.wpi.first.math.controller.PIDController;
+
+//  configuration constants (PID gains, motor IDs, etc) are in the Config.java file
 import frc.robot.config.*;
 
 
-//  imports (controllers, actuators, sensors, communication)
-
 public class Drivebase {
-
-  // controllers
-  // actuators
-  // sensors
-  // communication
 
 //   ###   #       ###   ####    ###   #       ####  
 //  #      #      #   #  #   #  #   #  #      #      
@@ -49,10 +44,11 @@ public class Drivebase {
 //   ###   #####   ###   ####   #   #  #####  ####   
 //
 //  global variables
+
+    //  driver control is an Xbox gamepad
     XboxController control;
 
-    AHRS ahrs;
-
+    //  three motors for each side of the drivebase
     CANSparkMax motor_left1;
     CANSparkMax motor_left2;
     CANSparkMax motor_left3;
@@ -60,22 +56,33 @@ public class Drivebase {
     CANSparkMax motor_right2;
     CANSparkMax motor_right3;
 
+    //  configuration constants 
     Config config = new Config();
 
-    // driving
+    //  position/direction tracking
     double odometerOrigin = 0;
     double directionOrigin = 0;
+
+    //  motor speed controllers can be configured either for BRAKE or COAST mode when at neutral
     enum BrakeModeType {BRAKE, COAST}
     BrakeModeType motorBrakeMode = BrakeModeType.BRAKE;
+    //  driver can use either TANK control (individual left and right throttles) or ARCADE control (separate throttle and steer)
     enum DriverInputModeType {TANK, ARCADE}
     DriverInputModeType driverInputMode = DriverInputModeType.ARCADE;
+    
+    //  auto driving will control motors to reach the target position
     int autodrive_target = 0;
     boolean autodrive_active = false;
+    //  auto steering will control motors to turn to the target direction
     int autoturn_target = 0;
     boolean autoturn_active = false;
+
+    //  auto driving and steering uses PID control
     PIDController drive_pid = new PIDController(config.kP_drive, config.kI_drive, config.kD_drive);
     PIDController turn_pid = new PIDController(config.kP_turn, config.kI_turn, config.kD_turn);
     
+    //  NavX accelerometer and compass information comes from the Attitude and Heading Reference System
+    AHRS navx;
   
 
     // test mode //
@@ -187,16 +194,17 @@ private void c_update_turn_pid() {
 //
 //  private functions for motor/pneumatic/servo output
 
-// set 
+  // set all three left side motors
   private void leftspeed(double speed) {
-    SmartDashboard.putNumber("left speed", speed);
+    SmartDashboard.putNumber("drive/left speed", speed);
     motor_left1.set(speed);
     motor_left2.set(speed);
     motor_left3.set(speed);
   }
 
+  // set all three right side motors
   private void rightspeed(double speed) {
-    SmartDashboard.putNumber("right speed:", speed);
+    SmartDashboard.putNumber("drive/right speed:", speed);
     motor_right1.set(speed);
     motor_right2.set(speed);
     motor_right3.set(speed);
@@ -235,16 +243,21 @@ private void c_update_turn_pid() {
 
   // read the number of degrees turned since the last reset
   private double direction() {
+    // old way:
     // degrees per count is computed from robot wheel size, wheelbase, gearbox ratio, and encoder counts per motor revolution
     // raw robot direction is difference between left and right side raw values
     // double dirRaw = (odoleft()-odoright());
     // return (dirRaw - directionOrigin) * config.kk_TurnDegreesPerCount;
-    return ahrs.getAngle() - directionOrigin;
+    // new way:
+    // read the value directly from the NavX
+    return navx.getAngle() - directionOrigin;
   }
 // reset the direction to zero
   private void directionReset() {
-//    directionOrigin = (odoleft()-odoright());
-    directionOrigin = ahrs.getAngle();
+    // old way:
+    // directionOrigin = (odoleft()-odoright());
+    // new way:
+    directionOrigin = navx.getAngle();
   }
 
 
@@ -257,8 +270,9 @@ private void c_update_turn_pid() {
 //
 //  public functions for autonomous control
 
-  public void drive(int distance) {
-    SmartDashboard.putNumber("drive target", distance);
+  // drive straight forward or backward to a specified target distance
+  public void auto_drive(int distance) {
+    SmartDashboard.putNumber("drive/target", distance);
     distanceReset();
     drive_pid.reset();
     drive_pid.setSetpoint(distance);
@@ -267,8 +281,9 @@ private void c_update_turn_pid() {
     autodrive_active = true;
   }
 
-  public void turn(int direction) {
-    SmartDashboard.putNumber("turn target", direction);
+  // turn in place left or right to a specified target angle
+  public void auto_turn(int direction) {
+    SmartDashboard.putNumber("turn/target", direction);
     directionReset();
     turn_pid.reset();
     turn_pid.setSetpoint(direction);
@@ -306,7 +321,7 @@ private void c_update_turn_pid() {
     // initialize
     control = driverControl;
 
-    ahrs = new AHRS(SPI.Port.kMXP);
+    navx = new AHRS(SPI.Port.kMXP);
 
     motor_left1 = newNEO(config.kmc_left1, config.kk_leftinvert);
     motor_left2 = newNEO(config.kmc_left2, config.kk_leftinvert);
@@ -318,12 +333,12 @@ private void c_update_turn_pid() {
     distanceReset();
     directionReset();
     
-    SmartDashboard.putNumber("kP drive",drive_pid.getP());
-    SmartDashboard.putNumber("kI drive",drive_pid.getI());
-    SmartDashboard.putNumber("kD drive",drive_pid.getD());
-    SmartDashboard.putNumber("kP turn",turn_pid.getP());
-    SmartDashboard.putNumber("kI turn",turn_pid.getI());
-    SmartDashboard.putNumber("kD turn",turn_pid.getD());
+    SmartDashboard.putNumber("drive/kP",drive_pid.getP());
+    SmartDashboard.putNumber("drive/kI",drive_pid.getI());
+    SmartDashboard.putNumber("drive/kD",drive_pid.getD());
+    SmartDashboard.putNumber("turn/kP",turn_pid.getP());
+    SmartDashboard.putNumber("turn/kI",turn_pid.getI());
+    SmartDashboard.putNumber("turn/kD",turn_pid.getD());
 
   }
 
@@ -394,7 +409,6 @@ private void c_update_turn_pid() {
     if (control.getRightStickButton()) {
       directionReset();
     }
-    SmartDashboard.putNumber("POV", control.getPOV());
     BrakeModeType oldBrakeMode = motorBrakeMode;
     if (oldBrakeMode != c_brakeMode()) {
       switch (motorBrakeMode) {
@@ -434,13 +448,13 @@ private void c_update_turn_pid() {
         SmartDashboard.putString("drive mode", "ARCADE");
         break;
     }
-    SmartDashboard.putNumber("odo left raw", odoleft());
-    SmartDashboard.putNumber("odo right raw", odoright());
-    SmartDashboard.putNumber("db distance", distance());
-    SmartDashboard.putNumber("db direction", direction());
+    SmartDashboard.putNumber("drive/odo left raw", odoleft());
+    SmartDashboard.putNumber("drive/odo right raw", odoright());
+    SmartDashboard.putNumber("drive/distance", distance());
+    SmartDashboard.putNumber("turn/direction", direction());
     
-    SmartDashboard.putBoolean("auto drive", autodrive_active);
-    SmartDashboard.putBoolean("auto turn", autoturn_active);
+    SmartDashboard.putBoolean("drive/auto", autodrive_active);
+    SmartDashboard.putBoolean("turn/auto", autoturn_active);
   }
 
 
@@ -453,14 +467,15 @@ private void c_update_turn_pid() {
 //
 //  provides special support for testing individual subsystem functionality
 
-/* exercise auto_drive and auto_turn functions */
+  // to exercise auto_drive and auto_turn functions:
+  // while holding down POV control, press and release the START button
   public void test() {
     if (control.getStartButtonPressed()) {
       switch (control.getPOV()) {
-        case 0: drive(48); break;
-        case 90: turn(90); break;
-        case 180: drive(-48); break;
-        case 270: turn(-90); break;
+        case 0: auto_drive(48); break;
+        case 90: auto_turn(90); break;
+        case 180: auto_drive(-48); break;
+        case 270: auto_turn(-90); break;
       }
     }
     c_update_drive_pid();

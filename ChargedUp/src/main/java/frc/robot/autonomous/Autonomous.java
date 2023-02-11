@@ -7,15 +7,7 @@
 //  #   #  #   #    #    #   #  #  ##  #   #  #   #  #   #  #   #      #
 //  #   #   ###     #     ###   #   #   ###   #   #   ###    ###   ####
 //
-//  description
-//
-//  notes
-//
-//  warnings
-// 
-//  behavior
-//  actuators
-//  sensors
+//  state machines for autonomous routines
 
 package frc.robot.autonomous;
 
@@ -41,6 +33,7 @@ public class Autonomous {
 //
 //  global variables
 
+//  menu of autonomous routines to be presented on Dashboard for selection  
 private static final String autoDefault = "Default"; // 0
 private static final String autoCustom = "Custom";
 private static final String autoLeav = "Leave"; // 1
@@ -54,10 +47,15 @@ private static final String autoScorLeavScorScorsame = "Score > Leave > Score > 
 private static final String autoScorLeavScorScordiff = "Score > Leave > Score > Score different row"; // 9
 
 private final SendableChooser<String> m_chooser = new SendableChooser<>();  
+
+//  the field is mirrored, so some directions will need to be reversed for some autonomous routines based on red vs blue alliance
 private Alliance alliance = Alliance.Invalid;
-private String mode = "";
+
+//  state machines have persistent states
+private String routine = "";
 private String state = "";
 
+//  subsystems to be controlled autonomously
 private Drivebase drivebase;
 private Arm arm;
 private Gripper gripper;
@@ -100,33 +98,34 @@ private void doDefault() {
 //  #   #   ###     #     ###           ###    ###   ####     #     ###   #   #
 //
 // Autonomous: work in progress
+// Use this function to develop an autonomous routine, then copy it to the routine's function when it works satisfactorily
 private void doCustom() {
   switch (state) {
     case "Start":
-      drivebase.drive(48);
+      drivebase.auto_drive(48);
       setstate("Forward");
       break;
    case "Forward":
       if (drivebase.stopped()) {
-        drivebase.turn(90);
+        drivebase.auto_turn(90);
         setstate("Turn Right");
       }
       break;
     case "Turn Right":
       if (drivebase.stopped()) {
-        drivebase.drive(24);
+        drivebase.auto_drive(24);
         setstate("Drive Right");
       }
       break;
     case "Drive Right":
       if (drivebase.stopped()) {
-        drivebase.turn(90);
+        drivebase.auto_turn(90);
         setstate("Turn Back");
       }
       break;
     case "Turn Back":
       if (drivebase.stopped()) {
-        drivebase.drive(48);
+        drivebase.auto_drive(48);
         setstate("Back");
       }
     case "Back":
@@ -149,6 +148,7 @@ private void doCustom() {
 //  #   #   ###     #     ###          #####  #####
 //
 // Autonomous: Leave
+// @@ to be implemented
 private void doLeav() {
   switch (state) {
     case "Start":
@@ -166,6 +166,7 @@ private void doLeav() {
 //  #   #   ###     #     ###          ####    ###          #####  #####
 //
 // Autonomous: Score, Leave
+// @@ to be implemented
 private void doScorLeav() {
   switch (state) {
     case "Start":
@@ -184,6 +185,7 @@ private void doScorLeav() {
 //  #   #   ###     #     ###          ####    ###          #####  #####         ####   ####
 //
 // Autonomous: Score, Leave, Score same row
+// @@ to be implemented
 private void doScorLeavScorsame() {
   switch (state) {
     case "Start":
@@ -202,6 +204,7 @@ private void doScorLeavScorsame() {
 //  #   #   ###     #     ###          ####    ###          #####  #####         ####   ####
 //
 // Autonomous: Score, Leave, Score different row
+// @@ to be implemented
 private void doScorLeavScordiff() {
   switch (state) {
     case "Start":
@@ -220,6 +223,7 @@ private void doScorLeavScordiff() {
 //  #   #   ###     #     ###          ####    ###          ####    ###
 //
 // Autonomous: Score, Dock
+// @@ to be implemented
 private void doScorDock() {
   switch (state) {
     case "Start":
@@ -238,6 +242,7 @@ private void doScorDock() {
 //  #   #   ###     #     ###          ####    ###          #####  #####         ####    ###
 //
 // Autonomous: Score, Leave, Dock
+// @@ to be implemented
 private void doScorLeavDock() {
   switch (state) {
     case "Start":
@@ -256,6 +261,7 @@ private void doScorLeavDock() {
 //  #   #   ###     #     ###          ####    ###          #####  #####         ####    ###          ####    ###
 //
 // Autonomous: Score, Leave, Score, Dock
+// @@ to be implemented
 private void doScorLeavScorDock() {
   switch (state) {
     case "Start":
@@ -274,6 +280,7 @@ private void doScorLeavScorDock() {
 //  #   #   ###     #     ###          ####    ###          #####  #####         ####    ###          ####   ####
 //
 // Autonomous: Score, Leave, Score, Score same row
+// @@ to be implemented
 private void doScorLeavScorScorsame() {
   switch (state) {
     case "Start":
@@ -292,6 +299,7 @@ private void doScorLeavScorScorsame() {
 //  #   #   ###     #     ###          ####    ###          #####  #####         ####    ###          ####   ####
 //
 // Autonomous: Score, Leave, Score, Score different row
+// @@ to be implemented
 private void doScorLeavScorScordiff() {
   switch (state) {
     case "Start":
@@ -351,9 +359,9 @@ private void doScorLeavScorScordiff() {
 //
   public void init() {
     alliance = DriverStation.getAlliance();
-    mode = m_chooser.getSelected();
-    SmartDashboard.putString("auto mode", mode);
-    System.out.println("Auto selected: " + mode);
+    routine = m_chooser.getSelected();
+    SmartDashboard.putString("auto routine", routine);
+    System.out.println("Auto selected: " + routine);
     setstate("Start");
   }
 
@@ -365,10 +373,12 @@ private void doScorLeavScorScordiff() {
 //  #   #  #   #  #  ##
 //  #   #   ###   #   #
 //
-//  dispatch to appropriate function for the selected mode
+//  dispatch to appropriate function for the selected routine
+//  @@ this could be made much simpler with function pointers, but Java doesn't quite have those
+//  @@ it could also be shortened using individual "routine" objects, but that's more work than doing it this way
   public void run() {
     SmartDashboard.putString("auto state", state);
-    switch (mode) {
+    switch (routine) {
         case autoCustom:
           // custom routine
           doCustom();

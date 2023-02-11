@@ -112,8 +112,8 @@ public final int kj_rightfar = kj_11; // base right far
 
   public final double kk_SlideInchesPerCount = (
       1.0 /* inches */ / 25.4 /* mm */
-    * 3.0 /* mm */ / 1.0 /* teeth */
-    * 36.0 /* teeth */ / 1.0 /* pulley revolutions */
+    * 5.0 /* mm */ / 1.0 /* teeth */
+    * 42.0 /* teeth */ / 1.0 /* pulley revolutions */
     * 1.0 /* pulley revolutions */ / 5.0 /* sensor counts */
   );
 

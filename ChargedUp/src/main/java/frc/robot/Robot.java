@@ -81,7 +81,7 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     drivebase.idle();
     arm.idle();
-    //gripper.idle();
+    gripper.idle();
   }
 
   /**

@@ -260,6 +260,18 @@ private void c_update_turn_pid() {
     directionOrigin = navx.getAngle();
   }
 
+  private double tilt() {
+    // compute tilt from accelerometer axes
+    // robot is rotated from navx default
+    double x = navx.getPitch();
+    SmartDashboard.putNumber("attitude/roll", x);
+    double y = navx.getRoll();
+    SmartDashboard.putNumber("attitude/pitch", y);
+    // up to a certain value, 
+    // tilt is just the hypotenuse of the right triangle having pitch and roll as the legs
+    return Math.sqrt(x*x + y*y);
+  }
+
 
 //
 //   ###   #   #  #####   ###   
@@ -455,6 +467,8 @@ private void c_update_turn_pid() {
     
     SmartDashboard.putBoolean("drive/auto", autodrive_active);
     SmartDashboard.putBoolean("turn/auto", autoturn_active);
+
+    SmartDashboard.putNumber("attitude/tilt", tilt());
   }
 
 

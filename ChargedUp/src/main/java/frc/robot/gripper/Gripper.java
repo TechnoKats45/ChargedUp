@@ -103,14 +103,16 @@ public class Gripper {
 //
 //  private functions for sensor feedback
 
-// Pololu Distance Sensor:
+// Pololu Distance Sensor, 50 cm max:
 // d = (3 mm/4 us)*(t-1000us)
+// Pololu Distance Sensor, 300 cm max:
+// d = (4 mm/1 us)*(t-1000us)
 double gamepieceInches() {
   // counter is in Semi-period mode measuring pulse width from rising edge to falling edge
   // returned value is measured pulse width in seconds so needs to be multiplied by 10^6
   // computed value is in millimeters so needs to be divided by 25.4 to return inches
   double pulsewidth = lidar.getPeriod();
-  return (3./4.) * ((pulsewidth*1000000.)-1000.) / 25.4;
+  return (4./1.) * ((pulsewidth*1000000.)-1000.) / 25.4;
 }
 
 //
@@ -144,6 +146,9 @@ double gamepieceInches() {
 
   public Gripper(Joystick userControl) {
     // initialize
+
+    control = userControl;
+    
     grabber = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, config.kpd_grab_in, config.kpd_grab_out);
     
     // Create a new Counter object in two-pulse mode

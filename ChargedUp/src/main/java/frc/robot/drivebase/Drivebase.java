@@ -30,7 +30,7 @@ import com.kauailabs.navx.frc.AHRS;
 
 //  auto drive and steering uses PID control
 import edu.wpi.first.math.controller.PIDController;
-
+import edu.wpi.first.math.filter.SlewRateLimiter;
 //  configuration constants (PID gains, motor IDs, etc) are in the Config.java file
 import frc.robot.config.*;
 
@@ -76,6 +76,7 @@ public class Drivebase {
     //  auto steering will control motors to turn to the target direction
     int autoturn_target = 0;
     boolean autoturn_active = false;
+    SlewRateLimiter acceleration;
 
     //  auto driving and steering uses PID control
     PIDController drive_pid = new PIDController(config.kP_drive, config.kI_drive, config.kD_drive);
@@ -122,12 +123,23 @@ private double deadband(double in, double band) {
     return deadband(-control.getRightY(),0.2);
   }
 
+// enable fine throttle control
+  private boolean c_vernier() {
+    return control.getAButton();
+  }
+  private boolean c_cubic() {
+    return control.getBButton();
+  }
+
 // split arcade control (speed on left, steer on right)
   private double c_speed() {
      double speed = deadband(-control.getLeftY(),0.2);
-     if (control.getAButtonPressed()) {
+     if (c_vernier()) {
       speed /= 2;
+     } else {
+      speed = speed*speed*speed;
      }
+/* Wes's quick-and-dirty acceleration limit has been replaced with a SlewRateLimiter
      if(speed > prevSpeed && Math.abs(speed - prevSpeed) > Config.kk_accel) {
       prevSpeed += Config.kk_accel;
       speed = prevSpeed;
@@ -139,6 +151,7 @@ private double deadband(double in, double band) {
      else {
       prevSpeed = speed;
      }
+*/
      return speed;
   }
   private double c_steer() {
@@ -360,6 +373,8 @@ private void c_update_turn_pid() {
     motor_right2 = newNEO(config.kmc_right2, config.kk_rightinvert);
     motor_right3 = newNEO(config.kmc_right3, config.kk_rightinvert);
 
+    acceleration = new SlewRateLimiter(config.kk_accel);
+
     distanceReset();
     directionReset();
     
@@ -391,8 +406,10 @@ private void c_update_turn_pid() {
         right = c_rightthrottle();
         break;
       case ARCADE:
-        left = c_speed()+c_steer();
-        right = c_speed()-c_steer();
+        double speed = acceleration.calculate(c_speed());
+        double steer = c_steer();
+        left = speed+steer;
+        right = speed-steer;
         break;
       default:
         left = 0;

@@ -13,33 +13,21 @@ package frc.robot.config;
 
 public class Config {
 
-// Logitech ATTACK 3 joystick button numbers
-public final int kj_1 = 1; 
-public final int kj_2 = 2; 
-public final int kj_3 = 3; 
-public final int kj_4 = 4; 
-public final int kj_5 = 5; 
-public final int kj_6 = 6; 
-public final int kj_7 = 7; 
-public final int kj_8 = 8; 
-public final int kj_9 = 9; 
-public final int kj_10 = 10; 
-public final int kj_11 = 11; 
 // Logitech ATTACK 3 joystick button labels
-public final int kj_trig = kj_1; // trigger
-public final int kj_down = kj_2; // thumb down
-public final int kj_up = kj_3; // thumb up
-public final int kj_left = kj_4; // thumb left
-public final int kj_right = kj_5; // thumb right
-public final int kj_leftfar = kj_6; // base left far
-public final int kj_leftnear = kj_7; // base left near
-public final int kj_centerleft = kj_8; // base center left
-public final int kj_centerright = kj_9; // base center right
-public final int kj_rightnear = kj_10; // base right near
-public final int kj_rightfar = kj_11; // base right far
+public final int kj_trig = 1; // trigger
+public final int kj_down = 2; // thumb down
+public final int kj_up = 3; // thumb up
+public final int kj_left = 4; // thumb left
+public final int kj_right = 5; // thumb right
+public final int kj_leftfar = 6; // base left far
+public final int kj_leftnear = 7; // base left near
+public final int kj_centerleft = 8; // base center left
+public final int kj_centerright = 9; // base center right
+public final int kj_rightnear = 10; // base right near
+public final int kj_rightfar = 11; // base right far
 
 // drivebase parameters
-  public static final double kk_accel = 0.02;
+  public static final double kk_accel = 0.02; // acceleration limit
   public final double kk_wheeldiameter = 6;
   public final double kk_gearreduction = 7.56;
   public final double kk_wheelbase = 18.0;

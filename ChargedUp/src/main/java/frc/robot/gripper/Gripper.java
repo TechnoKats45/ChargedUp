@@ -176,6 +176,7 @@ double gamepieceInches() {
     if (c_release()) {
       release();
     }
+    SmartDashboard.putNumber("Distance Sensor", lidar.getDistance());
   }
 
 

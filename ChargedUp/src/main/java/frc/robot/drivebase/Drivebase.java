@@ -9,7 +9,7 @@
 //  Drivebase subsystem
 //
 //  left side and right side motors
-//  NavX accelerometer and "gyro" compass
+//  NavX Config.kk_accelerometer and "gyro" compass
 //
 package frc.robot.drivebase;
 
@@ -81,8 +81,11 @@ public class Drivebase {
     PIDController drive_pid = new PIDController(config.kP_drive, config.kI_drive, config.kD_drive);
     PIDController turn_pid = new PIDController(config.kP_turn, config.kI_turn, config.kD_turn);
     
-    //  NavX accelerometer and compass information comes from the Attitude and Heading Reference System
+    //  NavX Config.accelerometer and compass information comes from the Attitude and Heading Reference System
     AHRS navx;
+
+    // accel control
+    double prevSpeed = 0;
   
 
     // test mode //
@@ -121,7 +124,22 @@ private double deadband(double in, double band) {
 
 // split arcade control (speed on left, steer on right)
   private double c_speed() {
-    return deadband(-control.getLeftY(),0.2);
+     double speed = deadband(-control.getLeftY(),0.2);
+     if (control.getAButtonPressed()) {
+      speed /= 2;
+     }
+     if(speed > prevSpeed && Math.abs(speed - prevSpeed) > Config.kk_accel) {
+      prevSpeed += Config.kk_accel;
+      speed = prevSpeed;
+     }
+     else if(speed < prevSpeed && Math.abs(speed - prevSpeed) > Config.kk_accel) {
+      prevSpeed -= Config.kk_accel;
+      speed = prevSpeed;
+     }
+     else {
+      prevSpeed = speed;
+     }
+     return speed;
   }
   private double c_steer() {
     return deadband(control.getRightX(),0.2)/5.0;
@@ -261,7 +279,7 @@ private void c_update_turn_pid() {
   }
 
   private double tilt() {
-    // compute tilt from accelerometer axes
+    // compute tilt from Config.kk_accelerometer axes
     // robot is rotated from navx default
     double x = navx.getPitch();
     SmartDashboard.putNumber("attitude/roll", x);

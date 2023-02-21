@@ -373,7 +373,7 @@ private void slidereset(double value) {
 //
 //  provides special support for testing individual subsystem functionality
 public void test() {
-    if (c_enable()) {
+    if (!c_enable()) {
         SmartDashboard.putBoolean("arm test enable", true);
 
         if (c_extend()) {
@@ -384,13 +384,13 @@ public void test() {
             extend(0);
         }
         if (c_left()) {
-            slide(-0.5);
-        } else if (c_right()) {
             slide(0.5);
+        } else if (c_right()) {
+            slide(-0.5);
         } else {
             slide(0);
         }
-        elevate(c_elevate());
+        elevate(-c_elevate());
     }
     
     else{

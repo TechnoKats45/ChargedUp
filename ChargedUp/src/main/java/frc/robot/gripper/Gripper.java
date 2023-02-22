@@ -54,6 +54,9 @@ public class Gripper {
   //  configuration constants
   Config config = new Config();
 
+  //  automatic grab mode -- based on gamepiece sensor
+  boolean autograb = false;
+
 
 //
 //   ###    ###   #   #  #####  ####    ###   #      
@@ -66,11 +69,17 @@ public class Gripper {
 
   //  close grabber claws
   boolean c_grab() {
+    return control.getRawButtonPressed(config.kj_leftnear);
+  }
+  boolean c_grabbing() {
     return control.getRawButton(config.kj_leftnear);
   }
 
   //  open grabber claws
   boolean c_release() {
+    return control.getRawButtonPressed(config.kj_leftfar);
+  }
+  boolean c_releasing() {
     return control.getRawButton(config.kj_leftfar);
   }
 
@@ -87,11 +96,13 @@ public class Gripper {
   //  close grabber claws
   void grab() {
     grabber.set(kForward);
+    SmartDashboard.putString("grip/state", "GRAB");
   }
 
   //  open grabber claws
   void release() {
     grabber.set(kReverse);
+    SmartDashboard.putString("grip/state", "RELEASE");
   }
 
 //
@@ -171,12 +182,27 @@ double gamepieceInches() {
 //  does everything necessary when the robot is enabled, either autonomous or teleoperated
   public void run() {
     if (c_grab()) {
-      grab();
+      if (c_releasing()) {
+        release();
+        autograb = true;
+      } else {
+        grab();
+        autograb = false;
+      }
     }
     if (c_release()) {
-      release();
+      if (c_grabbing()) {
+        release();
+        autograb = true;
+      } else {
+        release();
+        autograb = false;
+      }
     }
-    SmartDashboard.putNumber("Distance Sensor", lidar.getDistance());
+    if (gamepieceInches() < config.kk_grabrange) {
+      grab();
+      autograb = false;
+    }
   }
 
 
@@ -190,6 +216,7 @@ double gamepieceInches() {
 //  does everything necessary when the robot is running, either enabled or disabled
   public void idle() {
     SmartDashboard.putNumber("grip/sense Inches", gamepieceInches());
+    SmartDashboard.putBoolean("grip/autograb", autograb);
   }
 
   

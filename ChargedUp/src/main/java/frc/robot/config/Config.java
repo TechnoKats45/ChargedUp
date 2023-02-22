@@ -109,6 +109,11 @@ public final int kj_rightfar = 11; // base right far
   public final double kk_ArmSlideMin = -5;
   public final double kk_ArmSlideMax = 5;
 
+
+// gripper parameters
+  public final double kk_grabrange = 6.0; /*  */ 
+
+
 // CAN motor control IDs
 // -- drivebase --
   public final int kmc_left1 = 2;

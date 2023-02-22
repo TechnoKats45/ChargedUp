@@ -84,6 +84,10 @@ double elevation_target = 0;
 double slide_target = 0;
 double extension_target = 0;
 
+boolean autoelevation = false;
+boolean autoslide = false;
+boolean autoextend = false;
+
 //
 //   ###    ###   #   #  #####  ####    ###   #      
 //  #   #  #   #  ##  #    #    #   #  #   #  #      
@@ -92,6 +96,18 @@ double extension_target = 0;
 //   ###    ###   #   #    #    #   #   ###   #####  
 //
 //  private functions for driver/operator input
+
+// accommodate a deadband around zero for joystick inputs
+private double deadband(double in, double band) {
+  double value = 0;
+  if (in > band) {
+    value = in-band;
+  }
+  if (in <-band) {
+    value = in+band;
+  }
+  return value / (1-band);
+}
 
 boolean c_extend() { // extend arm
     return control.getRawButton(config.kj_up);
@@ -311,25 +327,53 @@ private void slidereset(double value) {
     if (c_resetangle()) {
         anglereset(0);
     }
-    double elevate = elevation_pid.calculate(elevationangle(), elevation_target);
-    elevationmotor.set(elevate);
+    double val = deadband(c_elevate(),0.2);
+    if (val != 0) {
+      autoelevation = false;
+    }
+    if (autoelevation) {
+      val = elevation_pid.calculate(elevationangle(), elevation_target);
+    }
+    elevate(val);
   }
   // arm extension
   private void run_extension() {
     if (c_resetextension()) {
         inchesreset(0); 
     }
-    double extend = extension_pid.calculate(extensioninches(), extension_target);
-    extensionmotor.set(extend);
+    double val = 0;
+    if (c_extend()) {
+      val = 0.5;
+      autoextend = false;
+    }
+    if (c_retract()) {
+      val = -0.5;
+      autoextend = false;
+    }
+    if (autoextend) {
+      val = extension_pid.calculate(extensioninches(), extension_target);
+    }
+    extend(val);
   }
   // arm slide
   private void run_slide() {
     if (c_resetslide()) {
         slidereset(0);
     }
-    // @@ to do: compute slide target position based on camera tracking of scoring location
-    double slide = slide_pid.calculate(slideinches(), slide_target);
-    slidemotor.set(slide);
+    double val = 0;
+    if (c_left()) {
+      val = 0.5;
+      autoslide = false;
+    }
+    if (c_right()) {
+      val = -0.5;
+      autoslide = false;
+    }
+    if (autoslide) {
+      // @@ to do: compute slide target position based on camera tracking of scoring location
+      double val = slide_pid.calculate(slideinches(), slide_target);
+    }
+    slide(val);
   }
   public void run() {
     run_elevation();
@@ -390,7 +434,7 @@ public void test() {
         } else {
             slide(0);
         }
-        elevate(-c_elevate());
+        elevate(c_elevate());
     }
     
     else{

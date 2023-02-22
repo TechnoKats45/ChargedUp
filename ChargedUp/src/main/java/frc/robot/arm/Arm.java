@@ -267,7 +267,20 @@ private void slidereset(double value) {
 //
 //  public functions for autonomous input
 
+public void auto_elevate(double angle) {
+  elevation_target = angle;
+  autoelevation = true;
+}
 
+public void auto_extend(double position) {
+  extension_target = position;
+  autoextend = true;
+}
+
+public void auto_slide(double position) {
+  slide_target = position;
+  autoslide = true;
+}
 
 //
 //   ###    ###   #   #   ####  #####  ####   #   #   ###   #####   ###   ####
@@ -371,7 +384,7 @@ private void slidereset(double value) {
     }
     if (autoslide) {
       // @@ to do: compute slide target position based on camera tracking of scoring location
-      double val = slide_pid.calculate(slideinches(), slide_target);
+      val = slide_pid.calculate(slideinches(), slide_target);
     }
     slide(val);
   }
@@ -392,16 +405,19 @@ private void slidereset(double value) {
 //  does everything necessary when the robot is running, either enabled or disabled
   public void idle() {
     SmartDashboard.putNumber("elevation/angle", elevationangle());
+    SmartDashboard.putNumber("elevation/target", elevation_target);
     SmartDashboard.putBoolean("elevation/fwd limit", elevation_forwardLimit.isPressed());
     SmartDashboard.putBoolean("elevation/rev limit", elevation_reverseLimit.isPressed());
     SmartDashboard.putNumber("elevation/sense", elevation_sense.getPosition());
 
     SmartDashboard.putNumber("extension/inches", extensioninches());
+    SmartDashboard.putNumber("extension/target", extension_target);
     SmartDashboard.putBoolean("extension/near limit", extension_nearLimit.isPressed());
     SmartDashboard.putBoolean("extension/far limit", extension_farLimit.isPressed());
     SmartDashboard.putNumber("extension/sense", extension_sense.getPosition());
 
     SmartDashboard.putNumber("slide/inches", slideinches());
+    SmartDashboard.putNumber("slide/target", slide_target);
     SmartDashboard.putBoolean("slide/left limit", slide_leftLimit.get());
     SmartDashboard.putBoolean("slide/right limit", slide_rightLimit.get());
     SmartDashboard.putNumber("slide/sense", slide_sense.get());

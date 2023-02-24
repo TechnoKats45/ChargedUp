@@ -126,7 +126,7 @@ boolean c_right() { // slide arm right
 }
 
 double c_elevate() { // elevation motor control
-    return control.getY();
+    return deadband(-control.getY(), 0.2);
 }
 
 boolean c_enable() { // enable manual arm control
@@ -148,6 +148,18 @@ boolean c_resetslide() { // set slide zero location (ideally centered)
 double c_throttle() { // scaled to be a value from 0 to 1
     return (control.getThrottle() + 1) / 2.0;
 } 
+
+boolean c_preset1() { // floor level
+  return control.getRawButton(config.kj_trig);
+}
+
+boolean c_preset2() { // middle node level
+  return control.getRawButton(config.kj_rightnear);
+}
+
+boolean c_preset3() { // top node level
+  return control.getRawButton(config.kj_rightfar);
+}
 
   // update elevation pid gains
   private void c_update_elevation_pid() {
@@ -237,7 +249,7 @@ private double elevationangle() {
 }
 
 private void anglereset(double value) {
-    angleOrigin = elevationmotor.getEncoder().getPosition() + value/config.kk_ArmDegreesPerCount;
+    angleOrigin = elevationmotor.getEncoder().getPosition() - value/config.kk_ArmDegreesPerCount;
 }
 
 private double extensioninches() {
@@ -246,7 +258,7 @@ private double extensioninches() {
 }
 
 private void inchesreset(double value) {
-    inchesOrigin = extensionmotor.getEncoder().getPosition() + value/config.kk_ExtensionInchesPerCount;
+    inchesOrigin = extensionmotor.getEncoder().getPosition() - value/config.kk_ExtensionInchesPerCount;
 }
 
 private double slideinches() {
@@ -255,7 +267,7 @@ private double slideinches() {
 }
 
 private void slidereset(double value) {
-    slideOrigin = slide_sense.get() + value/config.kk_SlideInchesPerCount;
+    slideOrigin = slide_sense.get() - value/config.kk_SlideInchesPerCount;
 }
 
 //
@@ -295,8 +307,9 @@ public void auto_slide(double position) {
     // initialize
     control = userController;
     elevationmotor = new CANSparkMax(config.kmc_elevate, MotorType.kBrushless);
-    elevationmotor.setInverted(true);
+    elevationmotor.setInverted(false);
     elevationmotor.setIdleMode(IdleMode.kBrake);
+    elevationmotor.burnFlash();
     elevation_forwardLimit = elevationmotor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     elevation_reverseLimit = elevationmotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     elevation_sense = elevationmotor.getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute);
@@ -308,7 +321,9 @@ public void auto_slide(double position) {
     slide_sense = new AnalogPotentiometer(config.kai_slide);
 
     extensionmotor = new CANSparkMax(config.kmc_extend, MotorType.kBrushless);
+    extensionmotor.setInverted(false);
     extensionmotor.setIdleMode(IdleMode.kCoast);
+    extensionmotor.burnFlash();
     extension_farLimit = extensionmotor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     extension_nearLimit = extensionmotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     extension_sense = extensionmotor.getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute);
@@ -339,6 +354,15 @@ public void auto_slide(double position) {
   private void run_elevation() {
     if (c_resetangle()) {
         anglereset(0);
+    }
+    if (c_preset1()) {
+      auto_elevate(config.kk_elevation_preset1);
+    }
+    if (c_preset2()) {
+      auto_elevate(config.kk_elevation_preset2);
+    }
+    if (c_preset3()) {
+      auto_elevate(config.kk_elevation_preset3);
     }
     double val = deadband(c_elevate(),0.2);
     if (val != 0) {
@@ -410,11 +434,25 @@ public void auto_slide(double position) {
     SmartDashboard.putBoolean("elevation/rev limit", elevation_reverseLimit.isPressed());
     SmartDashboard.putNumber("elevation/sense", elevation_sense.getPosition());
 
+    if (elevation_forwardLimit.isPressed()) {
+      anglereset(config.kk_elevationmax);
+    }
+    if (elevation_reverseLimit.isPressed()) {
+      anglereset(config.kk_elevationmin);
+    }
+
     SmartDashboard.putNumber("extension/inches", extensioninches());
     SmartDashboard.putNumber("extension/target", extension_target);
     SmartDashboard.putBoolean("extension/near limit", extension_nearLimit.isPressed());
     SmartDashboard.putBoolean("extension/far limit", extension_farLimit.isPressed());
     SmartDashboard.putNumber("extension/sense", extension_sense.getPosition());
+
+    if (extension_nearLimit.isPressed()) {
+      inchesreset(config.kk_extensionmin);
+    }
+    if (extension_farLimit.isPressed()) {
+      inchesreset(config.kk_extensionmax);
+    }
 
     SmartDashboard.putNumber("slide/inches", slideinches());
     SmartDashboard.putNumber("slide/target", slide_target);
@@ -434,7 +472,7 @@ public void auto_slide(double position) {
 //  provides special support for testing individual subsystem functionality
 public void test() {
     if (!c_enable()) {
-        SmartDashboard.putBoolean("arm test enable", true);
+        SmartDashboard.putBoolean("arm test enable", false);
 
         if (c_extend()) {
             extend(0.5);
@@ -451,33 +489,29 @@ public void test() {
             slide(0);
         }
         elevate(c_elevate());
-    }
-    
-    else{
-        SmartDashboard.putBoolean("arm test enable", false);
+    } else {
+        SmartDashboard.putBoolean("arm test enable", true);
         if (c_left()){
             c_update_elevation_pid();
-            elevation_target = c_throttle() * (config.kk_elevationmax - config.kk_elevationmin) + config.kk_elevationmin;
-            run_elevation();
+            auto_elevate(c_throttle() * (config.kk_elevationmax - config.kk_elevationmin) + config.kk_elevationmin);
+            elevate(elevation_pid.calculate(elevationangle(), elevation_target));
         } else {
             elevate(0);  
         }
         if (c_right()){
             c_update_extension_pid();
-            extension_target = c_throttle() * (config.kk_extensionmax - config.kk_extensionmin) + config.kk_extensionmin;
-            run_extension();
+            auto_extend(c_throttle() * (config.kk_extensionmax - config.kk_extensionmin) + config.kk_extensionmin);
+            extend(extension_pid.calculate(extensioninches(), extension_target));
         } else {
             extend(0);
         }
         if (c_retract()){
             c_update_slide_pid();
-            slide_target = c_throttle() * (config.kk_slidemax - config.kk_slidemin) + config.kk_slidemin;
-            run_slide();
+            auto_slide(c_throttle() * (config.kk_slidemax - config.kk_slidemin) + config.kk_slidemin);
+            slide(slide_pid.calculate(slideinches(), slide_target));
         } else {
             slide(0);
         }
-        
-        slide(0);
     }
 
 

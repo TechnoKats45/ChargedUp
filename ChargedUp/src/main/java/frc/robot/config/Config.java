@@ -63,15 +63,19 @@ public final int kj_rightfar = 11; // base right far
   public final double kk_extensionmin = 0;
   public final double kk_extensionmax = 19.5;
  
-  public final double kk_elevationmin = -90;
-  public final double kk_elevationmax = 90;
+  public final double kk_elevationmin = -127;
+  public final double kk_elevationmax = 115;
+
+  public final double kk_elevation_preset1 = 90;
+  public final double kk_elevation_preset2 = 45;
+  public final double kk_elevation_preset3 = 0;
 
   public final double kk_slidemin = -6;
   public final double kk_slidemax = 6;
 
-  public final double kP_elevation = 0.005;
-  public final double kI_elevation = 0.001;
-  public final double kD_elevation = 0;
+  public final double kP_elevation = 0.001;
+  public final double kI_elevation = 0.00;
+  public final double kD_elevation = 0.1;
 
   public final double kP_slide = 0.005;
   public final double kI_slide = 0.001;

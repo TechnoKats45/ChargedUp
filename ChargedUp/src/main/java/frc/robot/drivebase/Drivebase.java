@@ -336,7 +336,7 @@ private void c_update_turn_pid() {
   }
 
   public boolean stopped() {
-    return !autodrive_active;
+    return (drive_pid.atSetpoint() && turn_pid.atSetpoint());
   }
 
 //
@@ -422,17 +422,11 @@ private void c_update_turn_pid() {
     }
     if (autodrive_active) {
       double throttle = drive_pid.calculate(distance(), autodrive_target);
-      if (drive_pid.atSetpoint()) {
-        autodrive_active = false;
-      }
       left = throttle;
       right = throttle;
     }
     if (autoturn_active) {
       double rudder = turn_pid.calculate(direction(), autoturn_target);
-      if (turn_pid.atSetpoint()) {
-        autoturn_active = false;
-      }
       left = left + rudder;
       right = right - rudder;
     }

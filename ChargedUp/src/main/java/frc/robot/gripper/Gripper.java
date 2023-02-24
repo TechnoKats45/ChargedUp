@@ -199,7 +199,7 @@ double gamepieceInches() {
         autograb = false;
       }
     }
-    if (gamepieceInches() < config.kk_grabrange) {
+    if (autograb && (gamepieceInches() < config.kk_grabrange)) {
       grab();
       autograb = false;
     }

@@ -10,6 +10,7 @@
 //  Gripper subsystem
 //
 //  pneumatic solenoid valve for grabber cylinders
+//  pneumatic solenoid valve for gripper rotation
 //  infrared laser rangefinder
 //
 package frc.robot.gripper;
@@ -48,6 +49,9 @@ public class Gripper {
   //  pneumatic cylinders for grabber
   DoubleSolenoid grabber;
 
+  //  pneumatic cylinder for rotation
+  DoubleSolenoid rotator;
+
   //  rangefinder to detect game pieces in grabber
   Counter lidar;
 
@@ -83,6 +87,14 @@ public class Gripper {
     return control.getRawButton(config.kj_leftfar);
   }
 
+  boolean c_rotateForward() {
+    return control.getRawButton(config.kj_centerleft);
+  }
+
+  boolean c_rotateReverse() {
+    return control.getRawButton(config.kj_centerright);
+  }
+
 
 //
 //   ###    ###   #####  #   #   ###   #####  #####  
@@ -95,14 +107,23 @@ public class Gripper {
 
   //  close grabber claws
   void grab() {
-    grabber.set(kForward);
+    grabber.set(kReverse);
     SmartDashboard.putString("grip/state", "GRAB");
   }
 
   //  open grabber claws
   void release() {
-    grabber.set(kReverse);
+    grabber.set(kForward);
     SmartDashboard.putString("grip/state", "RELEASE");
+  }
+
+  //  rotate grabber
+  void rotate(boolean val) {
+    if (val) {
+      rotator.set(kForward);
+    } else {
+      rotator.set(kReverse);
+    }
   }
 
 //
@@ -161,7 +182,8 @@ double gamepieceInches() {
     control = userControl;
     
     grabber = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, config.kpd_grab_in, config.kpd_grab_out);
-    
+    rotator = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, config.kpd_rotate_fwd, config.kpd_rotate_rev);
+
     // Create a new Counter object in two-pulse mode
     lidar = new Counter(Counter.Mode.kSemiperiod);
     // Set up the input channel for the counter
@@ -203,6 +225,14 @@ double gamepieceInches() {
       grab();
       autograb = false;
     }
+    double armAngle = SmartDashboard.getNumber("elevation/angle", 0);
+    if (armAngle < -5 ) {
+      rotate(true);
+    }
+    if (armAngle > 5) {
+      rotate(false);
+    }
+
   }
 
 

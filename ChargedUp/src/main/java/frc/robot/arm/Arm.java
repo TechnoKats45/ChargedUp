@@ -30,7 +30,9 @@ import com.revrobotics.SparkMaxLimitSwitch;
 //  elevation and extension position feedback are connected to the SPARK MAX
 import com.revrobotics.SparkMaxAnalogSensor;
 
+//  elevation and extension use PID control
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 
 //  slide is a snowblower motor using a SPARK speed controller
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -79,6 +81,8 @@ double slideOrigin = 0;
 PIDController elevation_pid = new PIDController(config.kP_elevation, config.kI_elevation, config.kD_elevation);
 PIDController slide_pid = new PIDController(config.kP_slide, config.kI_slide, config.kD_slide);
 PIDController extension_pid = new PIDController(config.kP_extension, config.kI_extension, config.kD_extension);
+SlewRateLimiter elevation_rate;
+SlewRateLimiter extension_rate;
 
 double elevation_target = 0;
 double slide_target = 0;
@@ -184,12 +188,15 @@ boolean c_preset3() { // top node level
     double kD_extension = SmartDashboard.getNumber("extension/kD",config.kD_extension);
     if (kP_extension != extension_pid.getP()) {
       extension_pid.setP(kP_extension);
+      System.out.print("ext P");
     }
     if (kI_extension != extension_pid.getI()) {
       extension_pid.setI(kI_extension);
+      System.out.print("ext I");
     }
     if (kD_extension != extension_pid.getD()) {
       extension_pid.setD(kD_extension);
+      System.out.print("ext D");
     }
   }
 
@@ -314,6 +321,7 @@ public void auto_slide(double position) {
     elevation_reverseLimit = elevationmotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     elevation_sense = elevationmotor.getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute);
     anglereset(0);
+    elevation_rate = new SlewRateLimiter(config.kk_elevate_rate);
 
     slidemotor = new Spark(config.kmp_slide);
     slide_leftLimit = new DigitalInput(config.kdi_slideleft);
@@ -328,6 +336,7 @@ public void auto_slide(double position) {
     extension_nearLimit = extensionmotor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
     extension_sense = extensionmotor.getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute);
     inchesreset(0);
+    extension_rate = new SlewRateLimiter(config.kk_extend_rate);
 
     SmartDashboard.putNumber("elevation/kP",elevation_pid.getP());
     SmartDashboard.putNumber("elevation/kI",elevation_pid.getI());
@@ -377,6 +386,15 @@ public void auto_slide(double position) {
   private void run_extension() {
     if (c_resetextension()) {
         inchesreset(0); 
+    }
+    if (c_preset1()) {
+      auto_extend(config.kk_extension_preset1);
+    }
+    if (c_preset2()) {
+      auto_extend(config.kk_extension_preset2);
+    }
+    if (c_preset3()) {
+      auto_extend(config.kk_extension_preset3);
     }
     double val = 0;
     if (c_extend()) {
@@ -428,6 +446,8 @@ public void auto_slide(double position) {
 //
 //  does everything necessary when the robot is running, either enabled or disabled
   public void idle() {
+    c_update_elevation_pid();
+
     SmartDashboard.putNumber("elevation/angle", elevationangle());
     SmartDashboard.putNumber("elevation/target", elevation_target);
     SmartDashboard.putBoolean("elevation/fwd limit", elevation_forwardLimit.isPressed());
@@ -440,6 +460,8 @@ public void auto_slide(double position) {
     if (elevation_reverseLimit.isPressed()) {
       anglereset(config.kk_elevationmin);
     }
+
+    c_update_extension_pid();
 
     SmartDashboard.putNumber("extension/inches", extensioninches());
     SmartDashboard.putNumber("extension/target", extension_target);
@@ -459,6 +481,14 @@ public void auto_slide(double position) {
     SmartDashboard.putBoolean("slide/left limit", slide_leftLimit.get());
     SmartDashboard.putBoolean("slide/right limit", slide_rightLimit.get());
     SmartDashboard.putNumber("slide/sense", slide_sense.get());
+
+    if (slide_leftLimit.get()) {
+      slidereset(config.kk_slidemin);
+    }
+    if (slide_rightLimit.get()) {
+      slidereset(config.kk_slidemax);
+    }
+
   }
 
   

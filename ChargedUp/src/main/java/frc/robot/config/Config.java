@@ -27,7 +27,7 @@ public final int kj_rightnear = 10; // base right near
 public final int kj_rightfar = 11; // base right far
 
 // drivebase parameters
-  public static final double kk_accel = 0.02; // acceleration limit
+  public static final double kk_accel = 1.0; // acceleration limit
   public final double kk_wheeldiameter = 6;
   public final double kk_gearreduction = 7.56;
   public final double kk_wheelbase = 18.0;
@@ -63,26 +63,34 @@ public final int kj_rightfar = 11; // base right far
   public final double kk_extensionmin = 0;
   public final double kk_extensionmax = 19.5;
  
+  public final double kk_extension_preset1 = 1;
+  public final double kk_extension_preset2 = 10;
+  public final double kk_extension_preset3 = 19;
+
+  public final double kk_extend_rate = 4.0; /* 1/4 second to full power */
+
   public final double kk_elevationmin = -127;
-  public final double kk_elevationmax = 115;
+  public final double kk_elevationmax = 107;
 
   public final double kk_elevation_preset1 = 90;
-  public final double kk_elevation_preset2 = 45;
-  public final double kk_elevation_preset3 = 0;
+  public final double kk_elevation_preset2 = 0;
+  public final double kk_elevation_preset3 = -90;
+
+  public final double kk_elevate_rate = 4.0; /* 1/4 second to full power */
 
   public final double kk_slidemin = -6;
   public final double kk_slidemax = 6;
 
-  public final double kP_elevation = 0.001;
+  public final double kP_elevation = 1.00;
   public final double kI_elevation = 0.00;
-  public final double kD_elevation = 0.1;
+  public final double kD_elevation = 0.00;
 
   public final double kP_slide = 0.005;
   public final double kI_slide = 0.001;
   public final double kD_slide = 0;
 
-  public final double kP_extension = 0.005;
-  public final double kI_extension = 0.001;
+  public final double kP_extension = 0.001;
+  public final double kI_extension = 0.0;
   public final double kD_extension = 0;
 
   public final double kk_ExtensionInchesPerCount = (
@@ -115,7 +123,7 @@ public final int kj_rightfar = 11; // base right far
 
 
 // gripper parameters
-  public final double kk_grabrange = 6.0; /*  */ 
+  public final double kk_grabrange = 2.2; /* inches */ 
 
 
 // CAN motor control IDs
@@ -142,6 +150,8 @@ public final boolean kk_slideinvert = false;
 // Pneumatic control IDs
 public final int kpd_grab_in = 0;
 public final int kpd_grab_out = 1;
+public final int kpd_rotate_fwd = 2;
+public final int kpd_rotate_rev = 3;
 
 // Digital inputs
 public int kdi_slideleft = 0;

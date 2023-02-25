@@ -88,11 +88,13 @@ public class Gripper {
   }
 
   boolean c_rotateForward() {
-    return control.getRawButton(config.kj_centerleft);
+    return false;
+    // return control.getRawButton(config.kj_centerleft);
   }
 
   boolean c_rotateReverse() {
-    return control.getRawButton(config.kj_centerright);
+    return false;
+    // return control.getRawButton(config.kj_centerright);
   }
 
 

@@ -125,10 +125,18 @@ private double deadband(double in, double band) {
 
 // enable fine throttle control
   private boolean c_vernier() {
-    return control.getAButton();
+    return control.getLeftBumper();
   }
   private boolean c_cubic() {
-    return control.getBButton();
+    return control.getRightBumper();
+  }
+
+// color indications
+  private boolean c_blue() {
+    return control.getXButton();
+  }
+  private boolean c_yellow() {
+    return control.getYButton();
   }
 
 // split arcade control (speed on left, steer on right)

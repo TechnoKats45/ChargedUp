@@ -63,25 +63,27 @@ public final int kj_rightfar = 11; // base right far
   public final double kk_extensionmin = 0;
   public final double kk_extensionmax = 19.5;
  
-  public final double kk_extension_preset1 = 1;
-  public final double kk_extension_preset2 = 10;
-  public final double kk_extension_preset3 = 19;
-
   public final double kk_extend_rate = 4.0; /* 1/4 second to full power */
 
   public final double kk_elevationmin = -127;
   public final double kk_elevationmax = 107;
 
-  public final double kk_elevation_preset1 = 90;
-  public final double kk_elevation_preset2 = 0;
-  public final double kk_elevation_preset3 = -90;
+  public final double kk_elevation_preset0 = 63;
+  public final double kk_extension_preset0 = 8;
+  public final double kk_elevation_preset1 = -123;
+  public final double kk_extension_preset1 = 0;
+  public final double kk_elevation_preset2 = -65;
+  public final double kk_extension_preset2 = 3.5;
+  public final double kk_elevation_preset3 = -57;
+  public final double kk_extension_preset3 = 17;
 
-  public final double kk_elevate_rate = 4.0; /* 1/4 second to full power */
+
+  public final double kk_elevate_rate = 2.0; /* 1/2 second to full power */
 
   public final double kk_slidemin = -6;
   public final double kk_slidemax = 6;
 
-  public final double kP_elevation = 1.00;
+  public final double kP_elevation = 0.02;
   public final double kI_elevation = 0.00;
   public final double kD_elevation = 0.00;
 
@@ -89,7 +91,7 @@ public final int kj_rightfar = 11; // base right far
   public final double kI_slide = 0.001;
   public final double kD_slide = 0;
 
-  public final double kP_extension = 0.001;
+  public final double kP_extension = 0.4;
   public final double kI_extension = 0.0;
   public final double kD_extension = 0;
 
@@ -118,8 +120,8 @@ public final int kj_rightfar = 11; // base right far
     * 1.0 /* pulley revolutions */ / 5.0 /* sensor counts */
   );
 
-  public final double kk_ArmSlideMin = -5;
-  public final double kk_ArmSlideMax = 5;
+  public final double kk_ArmSlideMin = -4.75;
+  public final double kk_ArmSlideMax =  3.50;
 
 
 // gripper parameters
@@ -154,12 +156,15 @@ public final int kpd_rotate_fwd = 2;
 public final int kpd_rotate_rev = 3;
 
 // Digital inputs
-public int kdi_slideleft = 0;
-public int kdi_slideright = 1;
-public int kdi_gamepiecesense = 2;
+public final int kdi_slideleft = 0;
+public final int kdi_slideright = 1;
+public final int kdi_gamepiecesense = 2;
+public final int kdi_forcecoast = 3; 
+public final int kdi_colorblue = 4;
+public final int kdi_coloryellow = 5;
 
 // Analog inputs
-public int kai_slide = 0;
+public final int kai_slide = 0;
 
 
   public Config() {

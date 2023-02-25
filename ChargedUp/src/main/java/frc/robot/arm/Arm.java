@@ -74,6 +74,8 @@ private DigitalInput slide_leftLimit;
 private DigitalInput slide_rightLimit;
 private AnalogPotentiometer slide_sense;
 
+private DigitalInput force_coast;
+
 double angleOrigin = 0;
 double inchesOrigin = 0;
 double slideOrigin = 0;
@@ -88,7 +90,7 @@ double elevation_target = 0;
 double slide_target = 0;
 double extension_target = 0;
 
-boolean autoelevation = false;
+boolean autoelevate = false;
 boolean autoslide = false;
 boolean autoextend = false;
 
@@ -138,29 +140,33 @@ boolean c_enable() { // enable manual arm control
 }
 
 boolean c_resetangle() { // set elevation zero location (ideally straight up)
-    return control.getRawButton(config.kj_leftfar);
+    return false;
+    // return control.getRawButton(config.kj_leftfar);
 }
 
 boolean c_resetextension() { // set extension zero location (ideally fully retracted)
-    return control.getRawButton(config.kj_leftnear);
+    return false;
+    // control.getRawButton(config.kj_leftnear);
 }
 
 boolean c_resetslide() { // set slide zero location (ideally centered)
-    return control.getRawButton(config.kj_rightnear);
+    return false;
+    // control.getRawButton(config.kj_rightnear);
 }
 
 double c_throttle() { // scaled to be a value from 0 to 1
     return (control.getThrottle() + 1) / 2.0;
 } 
 
-boolean c_preset1() { // floor level
-  return control.getRawButton(config.kj_trig);
+boolean c_preset0() { // full forward
+  return control.getRawButton(config.kj_centerleft);
 }
-
+boolean c_preset1() { // floor level
+  return control.getRawButton(config.kj_centerright);
+}
 boolean c_preset2() { // middle node level
   return control.getRawButton(config.kj_rightnear);
 }
-
 boolean c_preset3() { // top node level
   return control.getRawButton(config.kj_rightfar);
 }
@@ -227,10 +233,22 @@ boolean c_preset3() { // top node level
 //  private functions for motor/pneumatic/servo output
 
 void elevate(double speed) {
+    if (!force_coast.get()) {
+      elevationmotor.setIdleMode(IdleMode.kCoast);
+      elevationmotor.set(0);
+    } else {
+      elevationmotor.setIdleMode(IdleMode.kBrake);
+    }
     SmartDashboard.putNumber("elevation/speed", speed);
     elevationmotor.set(speed);
 }
 void extend(double speed) {
+    if (!force_coast.get()) {
+      extensionmotor.setIdleMode(IdleMode.kCoast);
+      extensionmotor.set(0);
+    } else {
+      extensionmotor.setIdleMode(IdleMode.kBrake);
+    }
     SmartDashboard.putNumber("extension/speed", speed);
     extensionmotor.set(speed);
 }
@@ -288,7 +306,7 @@ private void slidereset(double value) {
 
 public void auto_elevate(double angle) {
   elevation_target = angle;
-  autoelevation = true;
+  autoelevate = true;
 }
 
 public void auto_extend(double position) {
@@ -338,6 +356,8 @@ public void auto_slide(double position) {
     inchesreset(0);
     extension_rate = new SlewRateLimiter(config.kk_extend_rate);
 
+    force_coast = new DigitalInput(config.kdi_forcecoast);
+
     SmartDashboard.putNumber("elevation/kP",elevation_pid.getP());
     SmartDashboard.putNumber("elevation/kI",elevation_pid.getI());
     SmartDashboard.putNumber("elevation/kD",elevation_pid.getD());
@@ -364,6 +384,9 @@ public void auto_slide(double position) {
     if (c_resetangle()) {
         anglereset(0);
     }
+    if (c_preset0()) {
+      auto_elevate(config.kk_elevation_preset0);
+    }
     if (c_preset1()) {
       auto_elevate(config.kk_elevation_preset1);
     }
@@ -375,9 +398,11 @@ public void auto_slide(double position) {
     }
     double val = deadband(c_elevate(),0.2);
     if (val != 0) {
-      autoelevation = false;
+      autoelevate = false;
+    } else if (!autoelevate) {
+      auto_elevate(elevationangle());
     }
-    if (autoelevation) {
+    if (autoelevate) {
       val = elevation_pid.calculate(elevationangle(), elevation_target);
     }
     elevate(val);
@@ -386,6 +411,9 @@ public void auto_slide(double position) {
   private void run_extension() {
     if (c_resetextension()) {
         inchesreset(0); 
+    }
+    if (c_preset0()) {
+      auto_extend(config.kk_extension_preset0);
     }
     if (c_preset1()) {
       auto_extend(config.kk_extension_preset1);
@@ -399,11 +427,14 @@ public void auto_slide(double position) {
     double val = 0;
     if (c_extend()) {
       val = 0.5;
-      autoextend = false;
     }
     if (c_retract()) {
       val = -0.5;
+    }
+    if (val != 0) {
       autoextend = false;
+    } else if (!autoextend) {
+      auto_extend(extensioninches());
     }
     if (autoextend) {
       val = extension_pid.calculate(extensioninches(), extension_target);
@@ -453,6 +484,7 @@ public void auto_slide(double position) {
     SmartDashboard.putBoolean("elevation/fwd limit", elevation_forwardLimit.isPressed());
     SmartDashboard.putBoolean("elevation/rev limit", elevation_reverseLimit.isPressed());
     SmartDashboard.putNumber("elevation/sense", elevation_sense.getPosition());
+    SmartDashboard.putBoolean("elevation/auto", autoelevate);
 
     if (elevation_forwardLimit.isPressed()) {
       anglereset(config.kk_elevationmax);
@@ -468,6 +500,7 @@ public void auto_slide(double position) {
     SmartDashboard.putBoolean("extension/near limit", extension_nearLimit.isPressed());
     SmartDashboard.putBoolean("extension/far limit", extension_farLimit.isPressed());
     SmartDashboard.putNumber("extension/sense", extension_sense.getPosition());
+    SmartDashboard.putBoolean("extension/auto", autoextend);
 
     if (extension_nearLimit.isPressed()) {
       inchesreset(config.kk_extensionmin);
@@ -478,14 +511,14 @@ public void auto_slide(double position) {
 
     SmartDashboard.putNumber("slide/inches", slideinches());
     SmartDashboard.putNumber("slide/target", slide_target);
-    SmartDashboard.putBoolean("slide/left limit", slide_leftLimit.get());
-    SmartDashboard.putBoolean("slide/right limit", slide_rightLimit.get());
+    SmartDashboard.putBoolean("slide/left limit", !slide_leftLimit.get());
+    SmartDashboard.putBoolean("slide/right limit", !slide_rightLimit.get());
     SmartDashboard.putNumber("slide/sense", slide_sense.get());
 
-    if (slide_leftLimit.get()) {
+    if (!slide_leftLimit.get()) {
       slidereset(config.kk_slidemin);
     }
-    if (slide_rightLimit.get()) {
+    if (!slide_rightLimit.get()) {
       slidereset(config.kk_slidemax);
     }
 

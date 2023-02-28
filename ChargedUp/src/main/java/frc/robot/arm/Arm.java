@@ -233,22 +233,10 @@ boolean c_preset3() { // top node level
 //  private functions for motor/pneumatic/servo output
 
 void elevate(double speed) {
-    if (!force_coast.get()) {
-      elevationmotor.setIdleMode(IdleMode.kCoast);
-      elevationmotor.set(0);
-    } else {
-      elevationmotor.setIdleMode(IdleMode.kBrake);
-    }
     SmartDashboard.putNumber("elevation/speed", speed);
     elevationmotor.set(speed);
 }
 void extend(double speed) {
-    if (!force_coast.get()) {
-      extensionmotor.setIdleMode(IdleMode.kCoast);
-      extensionmotor.set(0);
-    } else {
-      extensionmotor.setIdleMode(IdleMode.kBrake);
-    }
     SmartDashboard.putNumber("extension/speed", speed);
     extensionmotor.set(speed);
 }
@@ -356,7 +344,7 @@ public void auto_slide(double position) {
     inchesreset(0);
     extension_rate = new SlewRateLimiter(config.kk_extend_rate);
 
-    force_coast = new DigitalInput(config.kdi_forcecoast);
+    force_coast = new DigitalInput(config.kdi_forcearmcoast);
 
     SmartDashboard.putNumber("elevation/kP",elevation_pid.getP());
     SmartDashboard.putNumber("elevation/kI",elevation_pid.getI());
@@ -478,6 +466,17 @@ public void auto_slide(double position) {
 //  does everything necessary when the robot is running, either enabled or disabled
   public void idle() {
     c_update_elevation_pid();
+    if (!force_coast.get()) {
+      elevationmotor.setIdleMode(IdleMode.kCoast);
+      if (config.kk_armGREENmin < elevationangle() && elevationangle() < config.kk_armGREENmax) {
+        SmartDashboard.putString("elevation/color", "GREEN");
+      } else {
+        SmartDashboard.putString("elevation/color", "WHITE");
+      }
+    } else {
+      elevationmotor.setIdleMode(IdleMode.kBrake);
+      SmartDashboard.putString("elevation/color", "NONE");
+    }
 
     SmartDashboard.putNumber("elevation/angle", elevationangle());
     SmartDashboard.putNumber("elevation/target", elevation_target);
@@ -494,6 +493,12 @@ public void auto_slide(double position) {
     }
 
     c_update_extension_pid();
+    if (!force_coast.get()) {
+      extensionmotor.setIdleMode(IdleMode.kCoast);
+      extensionmotor.set(0);
+    } else {
+      extensionmotor.setIdleMode(IdleMode.kBrake);
+    }
 
     SmartDashboard.putNumber("extension/inches", extensioninches());
     SmartDashboard.putNumber("extension/target", extension_target);

@@ -27,7 +27,8 @@ public final int kj_rightnear = 10; // base right near
 public final int kj_rightfar = 11; // base right far
 
 // drivebase parameters
-  public static final double kk_accel = 1.0; // acceleration limit
+  public final double kk_accel = 1.0; // acceleration limit
+
   public final double kk_wheeldiameter = 6;
   public final double kk_gearreduction = 7.56;
   public final double kk_wheelbase = 18.0;
@@ -58,6 +59,10 @@ public final int kj_rightfar = 11; // base right far
   * 360.0 /* degree */ / 1.0 /* circle */
   * kk_slipfactor /* slip factor */
   );
+
+  public final double kk_LEDtime = 20; /* seconds */
+  public final double kk_armGREENmin = 42; /* degrees */
+  public final double kk_armGREENmax = 48; /* degrees */
 
   // arm parameters
   public final double kk_extensionmin = 0;
@@ -159,9 +164,12 @@ public final int kpd_rotate_rev = 3;
 public final int kdi_slideleft = 0;
 public final int kdi_slideright = 1;
 public final int kdi_gamepiecesense = 2;
-public final int kdi_forcecoast = 3; 
-public final int kdi_colorblue = 4;
-public final int kdi_coloryellow = 5;
+public final int kdi_forcearmcoast = 3;
+
+// Digital outputs
+public final int kdo_color1 = 4;
+public final int kdo_color2 = 5;
+public final int kdo_color3 = 6;
 
 // Analog inputs
 public final int kai_slide = 0;

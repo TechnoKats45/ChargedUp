@@ -16,16 +16,31 @@ package frc.robot.drivebase;
 //  driver control is an Xbox gamepad
 import edu.wpi.first.wpilibj.XboxController;
 
+//  to get alliance color information
+import edu.wpi.first.wpilibj.DriverStation;
+
 //  telemetry goes to the Dashboard for display
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+//  there's a LifeCam 3000 camera
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.hal.simulation.DIODataJNI;
 
 //  drive motors are NEO brushless motors using SPARK MAX speed controllers  
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+//  LED control is through roboRIO digital outputs
+import edu.wpi.first.wpilibj.DigitalOutput;
+import edu.wpi.first.wpilibj.Timer;
+
 //  NavX is plugged in to the roboRIO expansion port and uses SPI communication
 import edu.wpi.first.wpilibj.SPI;
+
+import java.security.DigestOutputStream;
+
 import com.kauailabs.navx.frc.AHRS;
 
 //  auto drive and steering uses PID control
@@ -47,6 +62,12 @@ public class Drivebase {
 
     //  driver control is an Xbox gamepad
     XboxController control;
+
+    //  driver station
+    DriverStation ds;
+
+    //  MS LifeCam
+    UsbCamera camera;
 
     //  three motors for each side of the drivebase
     CANSparkMax motor_left1;
@@ -71,10 +92,10 @@ public class Drivebase {
     DriverInputModeType driverInputMode = DriverInputModeType.ARCADE;
     
     //  auto driving will control motors to reach the target position
-    int autodrive_target = 0;
+    double autodrive_target = 0;
     boolean autodrive_active = false;
     //  auto steering will control motors to turn to the target direction
-    int autoturn_target = 0;
+    double autoturn_target = 0;
     boolean autoturn_active = false;
     SlewRateLimiter acceleration;
 
@@ -87,7 +108,12 @@ public class Drivebase {
 
     // accel control
     double prevSpeed = 0;
-  
+
+    // commands to color indicator LEDs
+    DigitalOutput colorLED1, colorLED2, colorLED3;
+    enum LEDColor {BLUE, RED, PURPLE, YELLOW, GREEN, WHITE}
+    Timer LEDtimer;
+
 
     // test mode //
     boolean test_runleft = false;
@@ -132,7 +158,7 @@ private double deadband(double in, double band) {
   }
 
 // color indications
-  private boolean c_blue() {
+  private boolean c_purple() {
     return control.getXButton();
   }
   private boolean c_yellow() {
@@ -163,7 +189,7 @@ private double deadband(double in, double band) {
      return speed;
   }
   private double c_steer() {
-    return deadband(control.getRightX(),0.2)/5.0;
+    return deadband(control.getRightX(),0.2)/3.0;
   }
 
 // check driver input mode
@@ -250,6 +276,48 @@ private void c_update_turn_pid() {
 
   }
 
+  // set LED colors
+  private void setLEDcolor(LEDColor color) {
+
+    switch (color) {
+      case BLUE:
+        colorLED1.set(false);
+        colorLED2.set(false);
+        colorLED3.set(false);
+        break;
+      case RED:
+        colorLED1.set(false);
+        colorLED2.set(false);
+        colorLED3.set(false);
+        break;
+      case PURPLE:
+        colorLED1.set(false);
+        colorLED2.set(false);
+        colorLED3.set(false);
+        break;
+      case YELLOW:
+        colorLED1.set(false);
+        colorLED2.set(false);
+        colorLED3.set(false);
+        break;
+      case GREEN:
+        colorLED1.set(false);
+        colorLED2.set(false);
+        colorLED3.set(false);
+        break;
+      case WHITE:
+        colorLED1.set(false);
+        colorLED2.set(false);
+        colorLED3.set(false);
+        break;
+      default:
+        colorLED1.set(false);
+        colorLED2.set(false);
+        colorLED3.set(false);
+        break;
+    }
+  }
+
 //
 //   ####  #####  #   #   ####  #####  
 //  #      #      ##  #  #      #      
@@ -324,22 +392,22 @@ private void c_update_turn_pid() {
   // drive straight forward or backward to a specified target distance
   public void auto_drive(int distance) {
     SmartDashboard.putNumber("drive/target", distance);
-    distanceReset();
-    drive_pid.reset();
-    drive_pid.setSetpoint(distance);
-    drive_pid.setTolerance(1);
-    autodrive_target = distance;
+    //distanceReset();
+    //drive_pid.reset();
+    autodrive_target = distance()+distance;
+    drive_pid.setSetpoint(autodrive_target);
+    drive_pid.setTolerance(2);
     autodrive_active = true;
   }
 
   // turn in place left or right to a specified target angle
   public void auto_turn(int direction) {
     SmartDashboard.putNumber("turn/target", direction);
-    directionReset();
-    turn_pid.reset();
-    turn_pid.setSetpoint(direction);
-    turn_pid.setTolerance(1);
-    autoturn_target = direction;
+    //directionReset();
+    //turn_pid.reset();
+    autoturn_target = direction()+direction;
+    turn_pid.setSetpoint(autoturn_target);
+    turn_pid.setTolerance(2);
     autoturn_active = true;
   }
 
@@ -372,6 +440,8 @@ private void c_update_turn_pid() {
     // initialize
     control = driverControl;
 
+    camera = CameraServer.startAutomaticCapture();
+
     navx = new AHRS(SPI.Port.kMXP);
 
     motor_left1 = newNEO(config.kmc_left1, config.kk_leftinvert);
@@ -386,12 +456,20 @@ private void c_update_turn_pid() {
     distanceReset();
     directionReset();
     
+
     SmartDashboard.putNumber("drive/kP",drive_pid.getP());
     SmartDashboard.putNumber("drive/kI",drive_pid.getI());
     SmartDashboard.putNumber("drive/kD",drive_pid.getD());
     SmartDashboard.putNumber("turn/kP",turn_pid.getP());
     SmartDashboard.putNumber("turn/kI",turn_pid.getI());
     SmartDashboard.putNumber("turn/kD",turn_pid.getD());
+
+    colorLED1 = new DigitalOutput(config.kdo_color1);
+    colorLED2 = new DigitalOutput(config.kdo_color2);
+    colorLED3 = new DigitalOutput(config.kdo_color3);
+    setLEDcolor(LEDColor.WHITE);
+    LEDtimer.reset();
+    LEDtimer.start();
 
   }
 
@@ -440,6 +518,13 @@ private void c_update_turn_pid() {
     }
     leftspeed(left);
     rightspeed(right);
+
+    if (c_purple()) {
+      setLEDcolor(LEDColor.PURPLE);
+    }
+    if (c_yellow()) {
+      setLEDcolor(LEDColor.YELLOW);
+    }
   }
 
 
@@ -452,6 +537,26 @@ private void c_update_turn_pid() {
 //
 //  does everything necessary when the robot is running, either enabled or disabled
   public void idle() {
+    String armColorRequest = SmartDashboard.getString("elevation/color", "NONE");
+    switch (armColorRequest) {
+      case "WHITE":
+        setLEDcolor(LEDColor.WHITE);
+        break;
+      case "GREEN":
+        setLEDcolor(LEDColor.GREEN);
+        break;
+      case "NONE":
+      default:
+        break;
+    }
+    if (LEDtimer.hasElapsed(config.kk_LEDtime)) {
+      DriverStation.Alliance color = DriverStation.getAlliance();
+      if (color == DriverStation.Alliance.Blue) {
+        setLEDcolor(LEDColor.BLUE);
+      } else {
+        setLEDcolor(LEDColor.RED);
+      }
+    }
     if (control.getLeftStickButton()) {
       distanceReset();
     }

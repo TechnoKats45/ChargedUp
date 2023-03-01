@@ -112,7 +112,7 @@ public class Drivebase {
     // commands to color indicator LEDs
     DigitalOutput colorLED1, colorLED2, colorLED3;
     enum LEDColor {BLUE, RED, PURPLE, YELLOW, GREEN, WHITE}
-    Timer LEDtimer;
+    Timer LEDtimer = new Timer();
 
 
     // test mode //
@@ -139,6 +139,17 @@ private double deadband(double in, double band) {
     value = in+band;
   }
   return value / (1-band);
+}
+
+// limit output to a specified maximum
+private double clamp (double in, double range) {
+  if (in > range) {
+    in = range;
+  }
+  if (in < -range) {
+    in = -range;
+  }
+  return in;
 }
 
 // tank control (individual left and right throttles)
@@ -278,27 +289,27 @@ private void c_update_turn_pid() {
 
   // set LED colors
   private void setLEDcolor(LEDColor color) {
-
+    // @@ The "false" and "true" values might have to be swapped
     switch (color) {
       case BLUE:
         colorLED1.set(false);
-        colorLED2.set(false);
+        colorLED2.set(true);
         colorLED3.set(false);
         break;
       case RED:
         colorLED1.set(false);
         colorLED2.set(false);
-        colorLED3.set(false);
+        colorLED3.set(true);
         break;
       case PURPLE:
-        colorLED1.set(false);
-        colorLED2.set(false);
+        colorLED1.set(true);
+        colorLED2.set(true);
         colorLED3.set(false);
         break;
       case YELLOW:
-        colorLED1.set(false);
+        colorLED1.set(true);
         colorLED2.set(false);
-        colorLED3.set(false);
+        colorLED3.set(true);
         break;
       case GREEN:
         colorLED1.set(false);
@@ -346,6 +357,7 @@ private void c_update_turn_pid() {
   // reset the odometer to zero
   private void distanceReset() {
     odometerOrigin = (odoleft()+odoright())/2.0;
+    autodrive_target = 0;
   }
 
   // read the number of degrees turned since the last reset
@@ -365,6 +377,7 @@ private void c_update_turn_pid() {
     // directionOrigin = (odoleft()-odoright());
     // new way:
     directionOrigin = navx.getAngle();
+    autoturn_target = 0;
   }
 
   private double tilt() {
@@ -391,10 +404,10 @@ private void c_update_turn_pid() {
 
   // drive straight forward or backward to a specified target distance
   public void auto_drive(int distance) {
-    SmartDashboard.putNumber("drive/target", distance);
     //distanceReset();
     //drive_pid.reset();
-    autodrive_target = distance()+distance;
+    autodrive_target = autodrive_target+distance;
+    SmartDashboard.putNumber("drive/target", autodrive_target);
     drive_pid.setSetpoint(autodrive_target);
     drive_pid.setTolerance(2);
     autodrive_active = true;
@@ -402,16 +415,16 @@ private void c_update_turn_pid() {
 
   // turn in place left or right to a specified target angle
   public void auto_turn(int direction) {
-    SmartDashboard.putNumber("turn/target", direction);
     //directionReset();
     //turn_pid.reset();
-    autoturn_target = direction()+direction;
+    autoturn_target = autoturn_target+direction;
+    SmartDashboard.putNumber("turn/target", autoturn_target);
     turn_pid.setSetpoint(autoturn_target);
     turn_pid.setTolerance(2);
     autoturn_active = true;
   }
 
-  public boolean stopped() {
+  public boolean attarget() {
     return (drive_pid.atSetpoint() && turn_pid.atSetpoint());
   }
 
@@ -455,7 +468,6 @@ private void c_update_turn_pid() {
 
     distanceReset();
     directionReset();
-    
 
     SmartDashboard.putNumber("drive/kP",drive_pid.getP());
     SmartDashboard.putNumber("drive/kI",drive_pid.getI());
@@ -508,11 +520,13 @@ private void c_update_turn_pid() {
     }
     if (autodrive_active) {
       double throttle = drive_pid.calculate(distance(), autodrive_target);
+      throttle = clamp(throttle, 0.2);
       left = throttle;
       right = throttle;
     }
     if (autoturn_active) {
       double rudder = turn_pid.calculate(direction(), autoturn_target);
+      rudder = clamp(rudder, 0.2);
       left = left + rudder;
       right = right - rudder;
     }

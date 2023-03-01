@@ -292,6 +292,14 @@ private void slidereset(double value) {
 //
 //  public functions for autonomous input
 
+public boolean elevation_at_target() {
+  return elevation_pid.atSetpoint();
+}
+
+public boolean extension_at_target() {
+  return extension_pid.atSetpoint();
+}
+
 public void auto_elevate(double angle) {
   elevation_target = angle;
   autoelevate = true;
@@ -328,6 +336,7 @@ public void auto_slide(double position) {
     elevation_sense = elevationmotor.getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute);
     anglereset(0);
     elevation_rate = new SlewRateLimiter(config.kk_elevate_rate);
+    elevation_pid.setTolerance(3);;
 
     slidemotor = new Spark(config.kmp_slide);
     slide_leftLimit = new DigitalInput(config.kdi_slideleft);
@@ -343,6 +352,7 @@ public void auto_slide(double position) {
     extension_sense = extensionmotor.getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute);
     inchesreset(0);
     extension_rate = new SlewRateLimiter(config.kk_extend_rate);
+    extension_pid.setTolerance(1);
 
     force_coast = new DigitalInput(config.kdi_forcearmcoast);
 

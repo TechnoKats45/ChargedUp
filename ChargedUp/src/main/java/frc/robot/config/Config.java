@@ -34,13 +34,13 @@ public final int kj_rightfar = 11; // base right far
   public final double kk_wheelbase = 18.0;
   public final double kk_slipfactor = 0.8;
 
-  public final double kP_drive = 0.005;
-  public final double kI_drive = 0.001;
-  public final double kD_drive = 0;
+  public final double kP_drive = 0.01;
+  public final double kI_drive = 0.0;
+  public final double kD_drive = 0.0;
 
-  public final double kP_turn = 0.002;
-  public final double kI_turn = 0.001;
-  public final double kD_turn = 0;
+  public final double kP_turn = 0.02;
+  public final double kI_turn = 0.0;
+  public final double kD_turn = 0.0;
 
   public final double kk_WheelInchesPerCount = (
     kk_wheeldiameter /* inch */ / 1.0 /* diameter */
@@ -73,6 +73,8 @@ public final int kj_rightfar = 11; // base right far
   public final double kk_elevationmin = -127;
   public final double kk_elevationmax = 107;
 
+
+  // @@ presets: elevation degrees, extension inches
   public final double kk_elevation_preset0 = 63;
   public final double kk_extension_preset0 = 8;
   public final double kk_elevation_preset1 = -123;

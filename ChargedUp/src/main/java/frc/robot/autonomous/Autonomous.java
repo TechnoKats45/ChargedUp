@@ -105,31 +105,38 @@ private void doCustom() {
       drivebase.auto_drive(48);
       setstate("Forward");
       break;
-   case "Forward":
-      if (drivebase.stopped()) {
+    case "Forward":
+      if (drivebase.attarget()) {
+        arm.auto_elevate(90);
+        setstate("Arm Straight");
+      }
+      break;
+    case "Arm Straight":
+      if (arm.elevation_at_target()) {
         drivebase.auto_turn(90);
         setstate("Turn Right");
       }
       break;
     case "Turn Right":
-      if (drivebase.stopped()) {
+      if (drivebase.attarget()) {
         drivebase.auto_drive(24);
         setstate("Drive Right");
       }
       break;
     case "Drive Right":
-      if (drivebase.stopped()) {
+      if (drivebase.attarget()) {
         drivebase.auto_turn(90);
         setstate("Turn Back");
       }
       break;
     case "Turn Back":
-      if (drivebase.stopped()) {
+      if (drivebase.attarget()) {
         drivebase.auto_drive(48);
         setstate("Back");
       }
     case "Back":
-      if (drivebase.stopped()) {
+      if (drivebase.attarget()) {
+        arm.auto_elevate(0);
         setstate("End");
       }
     case "End":
@@ -152,6 +159,8 @@ private void doCustom() {
 private void doLeav() {
   switch (state) {
     case "Start":
+      drivebase.auto_drive(168);
+      setstate("End");
     case "End":
     default:
       setstate ("Error");
@@ -167,6 +176,19 @@ private void doLeav() {
 //
 // Autonomous: Score, Leave
 // @@ to be implemented
+// >>> set robot back against substation, arm lined up with node, gamepiece in gripper
+// start:
+//  extend arm 10 (or whatever makes sense)
+//  elevate arm -60 (or whatever makes sense)
+// arm back:
+//  wait for elevation at setpoint
+//  open gripper
+//  extend arm 0
+//  elevate arm 90
+// arm forward:
+//  wait for elevation at setpoint
+//  drive forward 14 feet
+// end
 private void doScorLeav() {
   switch (state) {
     case "Start":

@@ -192,6 +192,23 @@ private void doLeav() {
 private void doScorLeav() {
   switch (state) {
     case "Start":
+      arm.auto_extend(10);
+      arm.auto_elevate(-60);
+      setstate("Arm Set");
+      break;
+    case "Arm Set":
+      if(arm.elevation_at_target() && arm.extension_at_target()) {
+        gripper.release();
+        arm.auto_extend(0);
+        arm.auto_elevate(90);
+        setstate("Scored");
+      }
+      break;
+    case "Scored":
+      if(arm.elevation_at_target() && arm.extension_at_target()) {
+        drivebase.auto_drive(168);
+        setstate("End");
+      }
     case "End":
     default:
       setstate ("Error");

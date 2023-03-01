@@ -114,7 +114,7 @@ public class Gripper {
   }
 
   //  open grabber claws
-  void release() {
+  public void release() {
     grabber.set(kForward);
     SmartDashboard.putString("grip/state", "RELEASE");
   }

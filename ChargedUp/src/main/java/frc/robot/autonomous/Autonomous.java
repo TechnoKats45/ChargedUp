@@ -266,7 +266,11 @@ private void doScorLeavScordiff() {
 private void doScorDock() {
   switch (state) {
     case "Start":
+      drivebase.auto_drive(100);
+      setstate("End");
+      break;
     case "End":
+      break;
     default:
       setstate ("Error");
       break;

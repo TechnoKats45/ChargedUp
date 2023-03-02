@@ -269,8 +269,6 @@ private void doScorDock() {
       drivebase.auto_drive(100);
       setstate("End");
       break;
-    case "End":
-      break;
     default:
       setstate ("Error");
       break;
@@ -289,6 +287,15 @@ private void doScorDock() {
 private void doScorLeavDock() {
   switch (state) {
     case "Start":
+      drivebase.auto_drive(180);
+      setstate("Out");
+      break;
+    case "Out":
+      if(drivebase.attarget()){
+        drivebase.auto_drive(-90);
+        setstate("End");
+      }
+      break;
     case "End":
     default:
       setstate ("Error");

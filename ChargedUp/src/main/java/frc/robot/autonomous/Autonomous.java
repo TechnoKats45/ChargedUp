@@ -45,6 +45,7 @@ private static final String autoScorLeavDock = "Score > Leave > Docked"; // 6
 private static final String autoScorLeavScorDock = "Score > Leave > Score > Docked"; // 7
 private static final String autoScorLeavScorScorsame = "Score > Leave > Score > Score same row"; // 8
 private static final String autoScorLeavScorScordiff = "Score > Leave > Score > Score different row"; // 9
+private static final String autoScorOnly = "Score"; //10
 
 private final SendableChooser<String> m_chooser = new SendableChooser<>();  
 
@@ -222,6 +223,41 @@ private void doScorLeav() {
     case "Scored":
       if(arm.elevation_at_target() && arm.extension_at_target()) {
         drivebase.auto_drive(168);
+        setstate("End");
+      }
+      break;
+    case "End":
+      break;
+    default:
+      setstate ("Error");
+      break;
+  }
+}
+
+public void doScor() {
+  switch (state) {
+    case "Start":
+      arm.auto_extend(10);
+      arm.auto_elevate(-85);
+      setstate("Arm Set");
+      break;
+    case "Arm Set":
+      if(arm.elevation_at_target() && arm.extension_at_target()) {
+        timestamp = System.currentTimeMillis();
+        setstate("Settled");
+      }
+      break;
+    case "Settled":
+      if(timestamp + 1000 <= System.currentTimeMillis()) {
+        gripper.release();
+        timestamp = System.currentTimeMillis();
+        setstate("Placed");
+      }
+      break;
+    case "Placed":
+      if (timestamp + 500 <= System.currentTimeMillis()) {
+        arm.auto_extend(0);
+        arm.auto_elevate(90);
         setstate("End");
       }
       break;
@@ -413,6 +449,7 @@ private void doScorLeavScorScordiff() {
     menuOption(autoScorLeavScorDock);
     menuOption(autoScorLeavScorsame);
     menuOption(autoScorLeavScorScordiff);
+    menuOption(autoScorOnly);
     SmartDashboard.putData("Auto choice", m_chooser);
 
   }
@@ -476,6 +513,9 @@ private void doScorLeavScorScordiff() {
           break;
         case autoScorLeavScorScordiff:
           doScorLeavScorScordiff();
+          break;
+        case autoScorOnly:
+          doScor();
           break;
         case autoDefault:
         default:

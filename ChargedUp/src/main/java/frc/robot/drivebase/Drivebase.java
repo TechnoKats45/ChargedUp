@@ -94,6 +94,7 @@ public class Drivebase {
     //  auto driving will control motors to reach the target position
     double autodrive_target = 0;
     boolean autodrive_active = false;
+    boolean autodrive_powerful = false;
     //  auto steering will control motors to turn to the target direction
     double autoturn_target = 0;
     boolean autoturn_active = false;
@@ -413,6 +414,14 @@ private void c_update_turn_pid() {
     autodrive_active = true;
   }
 
+  public void auto_drive_powerful(int distance) {
+    autodrive_target = autodrive_target+distance;
+    SmartDashboard.putNumber("drive/target", autodrive_target);
+    drive_pid.setSetpoint(autodrive_target);
+    drive_pid.setTolerance(2);
+    autodrive_powerful = true;
+  }
+
   // turn in place left or right to a specified target angle
   public void auto_turn(int direction) {
     //directionReset();
@@ -521,6 +530,12 @@ private void c_update_turn_pid() {
     if (autodrive_active) {
       double throttle = drive_pid.calculate(distance(), autodrive_target);
       throttle = clamp(throttle, 0.2);
+      left = throttle;
+      right = throttle;
+    }
+    if (autodrive_powerful) {
+      double throttle = drive_pid.calculate(distance(), autodrive_target);
+      throttle = clamp(throttle, 0.8);
       left = throttle;
       right = throttle;
     }

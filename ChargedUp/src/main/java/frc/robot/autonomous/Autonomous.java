@@ -266,7 +266,7 @@ private void doScorLeavScordiff() {
 private void doScorDock() {
   switch (state) {
     case "Start":
-      drivebase.auto_drive(100);
+      drivebase.auto_drive_powerful(100);
       setstate("End");
       break;
     default:
@@ -287,12 +287,12 @@ private void doScorDock() {
 private void doScorLeavDock() {
   switch (state) {
     case "Start":
-      drivebase.auto_drive(180);
+      drivebase.auto_drive_powerful(180);
       setstate("Out");
       break;
     case "Out":
       if(drivebase.attarget()){
-        drivebase.auto_drive(-90);
+        drivebase.auto_drive_powerful(-90);
         setstate("End");
       }
       break;

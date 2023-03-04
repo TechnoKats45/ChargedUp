@@ -196,7 +196,7 @@ private void doScorLeav() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-75);
+      arm.auto_elevate(-85);
       setstate("Arm Set");
       break;
     case "Arm Set":

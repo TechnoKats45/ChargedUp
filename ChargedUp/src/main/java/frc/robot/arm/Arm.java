@@ -116,11 +116,11 @@ private double deadband(double in, double band) {
 }
 
 boolean c_extend() { // extend arm
-    return control.getRawButton(config.kj_up);
+    return (control.getRawButton(config.kj_up) && extensioninches() < 20);
 }
 
 boolean c_retract() { // retract arm
-    return control.getRawButton(config.kj_down);
+    return (control.getRawButton(config.kj_down) && extensioninches() > 0.5);
 }
 
 boolean c_left() { // slide arm left

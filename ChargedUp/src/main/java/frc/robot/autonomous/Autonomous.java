@@ -60,6 +60,9 @@ private Drivebase drivebase;
 private Arm arm;
 private Gripper gripper;
 
+//  peristent measurement variables
+private long timestamp;
+
 //
 //  #####  #   #  #   #   ###   #####   ###    ###   #   #   ####
 //  #      #   #  ##  #  #   #    #      #    #   #  ##  #  #
@@ -198,7 +201,19 @@ private void doScorLeav() {
       break;
     case "Arm Set":
       if(arm.elevation_at_target() && arm.extension_at_target()) {
+        timestamp = System.currentTimeMillis();
+        setstate("Settled");
+      }
+      break;
+    case "Settled":
+      if(timestamp + 1000 <= System.currentTimeMillis()) {
         gripper.release();
+        timestamp = System.currentTimeMillis();
+        setstate("Placed");
+      }
+      break;
+    case "Placed":
+      if (timestamp + 500 <= System.currentTimeMillis()) {
         arm.auto_extend(0);
         arm.auto_elevate(90);
         setstate("Scored");
@@ -209,7 +224,9 @@ private void doScorLeav() {
         drivebase.auto_drive(168);
         setstate("End");
       }
+      break;
     case "End":
+      break;
     default:
       setstate ("Error");
       break;

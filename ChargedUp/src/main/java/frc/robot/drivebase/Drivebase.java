@@ -550,9 +550,13 @@ private void c_update_turn_pid() {
 
     if (c_purple()) {
       setLEDcolor(LEDColor.PURPLE);
+      LEDtimer.reset();
+      LEDtimer.start();
     }
     if (c_yellow()) {
       setLEDcolor(LEDColor.YELLOW);
+      LEDtimer.reset();
+      LEDtimer.start();
     }
   }
 

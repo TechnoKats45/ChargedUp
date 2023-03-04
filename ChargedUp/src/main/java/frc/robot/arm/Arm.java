@@ -394,7 +394,7 @@ public void auto_slide(double position) {
     if (c_preset3()) {
       auto_elevate(config.kk_elevation_preset3);
     }
-    double val = deadband(c_elevate(),0.2);
+    double val = deadband(c_elevate(),0.1);
     if (val != 0) {
       autoelevate = false;
     } else if (!autoelevate) {

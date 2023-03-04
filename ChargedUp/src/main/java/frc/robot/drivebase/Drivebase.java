@@ -171,10 +171,10 @@ private double clamp (double in, double range) {
 
 // color indications
   private boolean c_purple() {
-    return control.getXButton();
+    return control.getXButton() || control.getRightTriggerAxis() > 0.2;
   }
   private boolean c_yellow() {
-    return control.getYButton();
+    return control.getYButton() || control.getLeftTriggerAxis() > 0.2;
   }
 
 // split arcade control (speed on left, steer on right)

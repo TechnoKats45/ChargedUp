@@ -319,8 +319,35 @@ private void doScorLeavScordiff() {
 private void doScorDock() {
   switch (state) {
     case "Start":
+      arm.auto_extend(10);
+      arm.auto_elevate(-85);
+      setstate("Arm Set");
+      break;
+    case "Arm Set":
+      if(arm.elevation_at_target() && arm.extension_at_target()) {
+        timestamp = System.currentTimeMillis();
+        setstate("Settled");
+      }
+      break;
+    case "Settled":
+      if(timestamp + 1000 <= System.currentTimeMillis()) {
+        gripper.release();
+        timestamp = System.currentTimeMillis();
+        setstate("Placed");
+      }
+      break;
+    case "Placed":
+      if (timestamp + 500 <= System.currentTimeMillis()) {
+        arm.auto_extend(0);
+        arm.auto_elevate(90);
+        setstate("Scored");
+      }
+      break;
+    case "Scored":
       drivebase.auto_drive_powerful(100);
       setstate("End");
+      break;
+    case "End":
       break;
     default:
       setstate ("Error");
@@ -340,6 +367,31 @@ private void doScorDock() {
 private void doScorLeavDock() {
   switch (state) {
     case "Start":
+      arm.auto_extend(10);
+      arm.auto_elevate(-85);
+      setstate("Arm Set");
+      break;
+    case "Arm Set":
+      if(arm.elevation_at_target() && arm.extension_at_target()) {
+        timestamp = System.currentTimeMillis();
+        setstate("Settled");
+      }
+      break;
+    case "Settled":
+      if(timestamp + 1000 <= System.currentTimeMillis()) {
+        gripper.release();
+        timestamp = System.currentTimeMillis();
+        setstate("Placed");
+      }
+      break;
+    case "Placed":
+      if (timestamp + 500 <= System.currentTimeMillis()) {
+        arm.auto_extend(0);
+        arm.auto_elevate(90);
+        setstate("Scored");
+      }
+      break;
+    case "Scored":
       drivebase.auto_drive_powerful(180);
       setstate("Out");
       break;
@@ -350,6 +402,7 @@ private void doScorLeavDock() {
       }
       break;
     case "End":
+      break;
     default:
       setstate ("Error");
       break;

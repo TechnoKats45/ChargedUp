@@ -344,7 +344,7 @@ private void doScorDock() {
       }
       break;
     case "Scored":
-      drivebase.auto_drive_powerful(100);
+      drivebase.auto_drive(105);
       setstate("End");
       break;
     case "End":
@@ -392,12 +392,12 @@ private void doScorLeavDock() {
       }
       break;
     case "Scored":
-      drivebase.auto_drive_powerful(180);
+      drivebase.auto_drive(190);
       setstate("Out");
       break;
     case "Out":
       if(drivebase.attarget()){
-        drivebase.auto_drive_powerful(-90);
+        drivebase.auto_drive(-100);
         setstate("End");
       }
       break;

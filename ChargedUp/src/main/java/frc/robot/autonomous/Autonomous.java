@@ -345,7 +345,20 @@ private void doScorDock() {
       break;
     case "Scored":
       drivebase.auto_drive(105);
-      setstate("End");
+      setstate("On Dock");
+      break;
+    case "On Dock":
+      if (drivebase.attarget()) {
+        if (drivebase.pitch() > 0.5) {
+          drivebase.auto_drive(1);
+        }
+        else if (drivebase.pitch() < -0.5) {
+          drivebase.auto_drive(1);
+        }
+        else {
+          setstate("End");
+        }
+      }
       break;
     case "End":
       break;
@@ -365,6 +378,7 @@ private void doScorDock() {
 // Autonomous: Score, Leave, Dock
 // @@ to be implemented
 private void doScorLeavDock() {
+  
   switch (state) {
     case "Start":
       arm.auto_extend(10);
@@ -398,7 +412,20 @@ private void doScorLeavDock() {
     case "Out":
       if(drivebase.attarget()){
         drivebase.auto_drive(-100);
-        setstate("End");
+        setstate("On Dock");
+      }
+      break;
+      case "On Dock":
+      if (drivebase.attarget()) {
+        if (drivebase.pitch() > 0.5) {
+          drivebase.auto_drive(1);
+        }
+        else if (drivebase.pitch() < -0.5) {
+          drivebase.auto_drive(-1);
+        }
+        else {
+          setstate("End");
+        }
       }
       break;
     case "End":

@@ -393,6 +393,10 @@ private void c_update_turn_pid() {
     return Math.sqrt(x*x + y*y);
   }
 
+  public double pitch() {
+    return navx.getPitch();
+  }
+
 
 //
 //   ###   #   #  #####   ###   

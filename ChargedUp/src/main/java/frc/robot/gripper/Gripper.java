@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
 import java.lang.ModuleLayer.Controller;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
 //  sensor is a rangefinder with PWM output, readable by a RoboRIO counter on a digital input
 import edu.wpi.first.wpilibj.Counter;
@@ -77,6 +78,8 @@ public class Gripper {
 
   //  rotation set point: true is for forward, false is for backwards
   boolean rotation = true;
+
+  PIDController thetaPID = new PIDController(0, 0, 0)
 
 
 //
@@ -255,7 +258,7 @@ double gamepieceInches() {
     if (c_cone()) {
       grabCube();
     }
-    if (c_intake() && !c_release() && gamepieceInches() > 0 /*TODO: replace this with an actual value */) {
+    if (c_intake() && !c_release() && gamepieceInches() > config.kk_holdrange /*TODO: replace this with an actual value */) {
       intake();
     }
     else if (c_release() && !c_intake()) {

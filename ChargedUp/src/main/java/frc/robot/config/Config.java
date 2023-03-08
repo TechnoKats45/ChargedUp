@@ -132,7 +132,11 @@ public final int kj_rightfar = 11; // base right far
 
 
 // gripper parameters
-  public final double kk_grabrange = 2.2; /* inches */ 
+  public final double kk_holdrange = 2.2; /* inches */ 
+
+  public final double kP_theta = 0.1;
+  public final double kI_theta = 0.0;
+  public final double kD_theta = 0.0;
 
 
 // CAN motor control IDs

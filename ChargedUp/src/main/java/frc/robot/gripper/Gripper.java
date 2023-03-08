@@ -27,8 +27,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
-import java.lang.ModuleLayer.Controller;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
 //  sensor is a rangefinder with PWM output, readable by a RoboRIO counter on a digital input
@@ -79,7 +77,7 @@ public class Gripper {
   //  rotation set point: true is for forward, false is for backwards
   boolean rotation = true;
 
-  PIDController thetaPID = new PIDController(0, 0, 0)
+  PIDController thetaPID = new PIDController(config.kP_theta, config.kI_theta, config.kD_theta);
 
 
 //
@@ -112,12 +110,10 @@ public class Gripper {
   }
 
   boolean c_intake() {
-    //TODO: Define this
     return control.getRawButton(config.kj_leftnear);
   }
 
   boolean c_release() {
-    //TODO: Define this
     return control.getRawButton(config.kj_leftfar);
   }
 
@@ -169,7 +165,14 @@ public class Gripper {
 
   //  This function runs the PID loop to rotate the gripper
   void theta() {
-    //TODO: PID system to set gripper rotation
+    double position;
+    if (rotation) {
+      position = 0; //TODO: set actual values
+    }
+    else {
+      position = 1;
+    }
+    rotator.set(thetaPID.calculate(thetaAngle.get(), position));
   }
 
 //
@@ -239,7 +242,10 @@ double gamepieceInches() {
     lidar.setUpSource(config.kdi_gamepiecesense);
     // Set the encoder to count pulse duration from rising edge to falling edge
     lidar.setSemiPeriodMode(true);
-
+    
+    SmartDashboard.putNumber("gripper/kP",thetaPID.getP());
+    SmartDashboard.putNumber("gripper/kI",thetaPID.getI());
+    SmartDashboard.putNumber("gripper/kD",thetaPID.getD());
   }
 
 

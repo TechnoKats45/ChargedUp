@@ -22,10 +22,14 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 //  actuator is a pair of pneumatic cylinders plumbed to a double solenoid wired to a Pneumatic Control Module
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.*;
+import edu.wpi.first.wpilibj.Servo;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.motorcontrol.MotorController;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
+import java.lang.ModuleLayer.Controller;
+
+import edu.wpi.first.wpilibj.AnalogPotentiometer;
 //  sensor is a rangefinder with PWM output, readable by a RoboRIO counter on a digital input
 import edu.wpi.first.wpilibj.Counter;
 
@@ -46,11 +50,21 @@ public class Gripper {
   //  operator control is an ATTACK 3 joystick
   Joystick control;
 
-  //  pneumatic cylinders for grabber
-  DoubleSolenoid grabber;
+  // driver controller is an xbox controller
+  XboxController driver;
 
-  //  pneumatic cylinder for rotation
-  DoubleSolenoid rotator;
+  //  servo for grabber
+  Servo grabber;
+
+  //  motorized theta for rotation
+  MotorController rotator;
+
+  //  encoder to measure theta
+  AnalogPotentiometer thetaAngle;
+
+  //  motorized intakes
+  MotorController leftIntake;
+  MotorController rightIntake;
 
   //  rangefinder to detect game pieces in grabber
   Counter lidar;
@@ -60,6 +74,9 @@ public class Gripper {
 
   //  automatic grab mode -- based on gamepiece sensor
   boolean autograb = false;
+
+  //  rotation set point: true is for forward, false is for backwards
+  boolean rotation = true;
 
 
 //
@@ -72,19 +89,13 @@ public class Gripper {
 //  private functions for driver/operator input
 
   //  close grabber claws
-  boolean c_grab() {
-    return control.getRawButtonPressed(config.kj_leftnear);
-  }
-  boolean c_grabbing() {
-    return control.getRawButton(config.kj_leftnear);
+  boolean c_cube() {
+    return driver.getRightTriggerAxis() > 0.2 || driver.getYButton();
   }
 
   //  open grabber claws
-  boolean c_release() {
-    return control.getRawButtonPressed(config.kj_leftfar);
-  }
-  boolean c_releasing() {
-    return control.getRawButton(config.kj_leftfar);
+  boolean c_cone() {
+    return driver.getLeftTriggerAxis() > 0.2 || driver.getXButton();
   }
 
   boolean c_rotateForward() {
@@ -97,6 +108,20 @@ public class Gripper {
     // return control.getRawButton(config.kj_centerright);
   }
 
+  boolean c_intake() {
+    //TODO: Define this
+    return control.getRawButton(config.kj_leftnear);
+  }
+
+  boolean c_release() {
+    //TODO: Define this
+    return control.getRawButton(config.kj_leftfar);
+  }
+
+  void setIntake(double speed) {
+    leftIntake.set(speed);
+    rightIntake.set(speed);
+  }
 
 //
 //   ###    ###   #####  #   #   ###   #####  #####  
@@ -108,24 +133,40 @@ public class Gripper {
 //  private functions for motor/pneumatic/servo output
 
   //  close grabber claws
-  void grab() {
-    grabber.set(kReverse);
-    SmartDashboard.putString("grip/state", "GRAB");
+  void grabCone() {
+    grabber.set(-.5);
+    SmartDashboard.putString("grip/state", "CONE");
   }
 
   //  open grabber claws
+  public void grabCube() {
+    grabber.set(.5);
+    SmartDashboard.putString("grip/state", "CUBE");
+  }
+
+  public void intake() {
+    setIntake(1);
+    SmartDashboard.putString("intake state", "Intaking");
+  }
+
   public void release() {
-    grabber.set(kForward);
-    SmartDashboard.putString("grip/state", "RELEASE");
+    setIntake(-1);
+    SmartDashboard.putString("intake state", "Releasing");
+  }
+
+  public void hold() {
+    setIntake(0);
+    SmartDashboard.putString("intake state", "Holding");
   }
 
   //  rotate grabber
   void rotate(boolean val) {
-    if (val) {
-      rotator.set(kForward);
-    } else {
-      rotator.set(kReverse);
-    }
+    rotation = val;
+  }
+
+  //  This function runs the PID loop to rotate the gripper
+  void theta() {
+    //TODO: PID system to set gripper rotation
   }
 
 //
@@ -158,6 +199,7 @@ double gamepieceInches() {
 //
 //  public functions for autonomous input
 
+  /* Deprecated
   // true to close claw; false to open claw
   public void auto_grip(boolean value) {
     if (value) {
@@ -167,6 +209,7 @@ double gamepieceInches() {
     }
   
   }
+  */
 
 
 //
@@ -178,13 +221,14 @@ double gamepieceInches() {
 //
 //  creates a new Gripper 
 
-  public Gripper(Joystick userControl) {
+  public Gripper(Joystick userControl, XboxController driver) {
     // initialize
 
     control = userControl;
+    this.driver = driver;
     
-    grabber = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, config.kpd_grab_in, config.kpd_grab_out);
-    rotator = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, config.kpd_rotate_fwd, config.kpd_rotate_rev);
+    grabber = new Servo(0);
+    rotator = new Spark(0);
 
     // Create a new Counter object in two-pulse mode
     lidar = new Counter(Counter.Mode.kSemiperiod);
@@ -205,27 +249,20 @@ double gamepieceInches() {
 //
 //  does everything necessary when the robot is enabled, either autonomous or teleoperated
   public void run() {
-    if (c_grab()) {
-      if (c_releasing()) {
-        release();
-        autograb = true;
-      } else {
-        grab();
-        autograb = false;
-      }
+    if (c_cube()) {
+      grabCone();
     }
-    if (c_release()) {
-      if (c_grabbing()) {
-        release();
-        autograb = true;
-      } else {
-        release();
-        autograb = false;
-      }
+    if (c_cone()) {
+      grabCube();
     }
-    if (autograb && (gamepieceInches() < config.kk_grabrange)) {
-      grab();
-      autograb = false;
+    if (c_intake() && !c_release() && gamepieceInches() > 0 /*TODO: replace this with an actual value */) {
+      intake();
+    }
+    else if (c_release() && !c_intake()) {
+      release();
+    }
+    else {
+      hold();
     }
     double armAngle = SmartDashboard.getNumber("elevation/angle", 0);
     if (armAngle < -5 ) {
@@ -234,7 +271,7 @@ double gamepieceInches() {
     if (armAngle > 5) {
       rotate(false);
     }
-
+    theta();
   }
 
 

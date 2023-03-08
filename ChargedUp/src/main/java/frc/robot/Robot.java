@@ -59,7 +59,7 @@ public class Robot extends TimedRobot {
   private Drivebase drivebase = new Drivebase(drivercontroller);
   private Joystick operatorcontroller = new Joystick(1);
   private Arm arm = new Arm(operatorcontroller);
-  private Gripper gripper = new Gripper(operatorcontroller);
+  private Gripper gripper = new Gripper(operatorcontroller, drivercontroller);
   private Autonomous autonomous = new Autonomous(drivebase, arm, gripper);
   /**
    * This function is run when the robot is first started up and should be used for any

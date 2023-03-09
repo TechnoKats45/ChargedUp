@@ -353,7 +353,7 @@ private void doScorDock() {
           drivebase.auto_drive(1);
         }
         else if (drivebase.pitch() < -0.5) {
-          drivebase.auto_drive(1);
+          drivebase.auto_drive(-1);
         }
         else {
           setstate("End");

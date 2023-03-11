@@ -24,14 +24,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //  actuator is a pair of pneumatic cylinders plumbed to a double solenoid wired to a Pneumatic Control Module
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.motorcontrol.MotorController;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
+
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.AnalogPotentiometer;
 //  sensor is a rangefinder with PWM output, readable by a RoboRIO counter on a digital input
 import edu.wpi.first.wpilibj.Counter;
-
+import edu.wpi.first.wpilibj.Encoder;
 //  configuration constants (PCM ports, Digital Input IDs, etc.) are in the Config.java file
 import frc.robot.config.*;
 
@@ -56,14 +57,14 @@ public class Gripper {
   Servo grabber;
 
   //  motorized theta for rotation
-  MotorController rotator;
+  TalonSRX rotator;
 
   //  encoder to measure theta
-  AnalogPotentiometer thetaAngle;
+  Encoder thetaAngle;
 
   //  motorized intakes
-  MotorController leftIntake;
-  MotorController rightIntake;
+  TalonSRX leftIntake;
+  TalonSRX rightIntake;
 
   //  rangefinder to detect game pieces in grabber
   Counter lidar;
@@ -78,6 +79,17 @@ public class Gripper {
   boolean rotation = true;
 
   PIDController thetaPID = new PIDController(config.kP_theta, config.kI_theta, config.kD_theta);
+
+  // limit output to a specified maximum
+private double clamp (double in, double range) {
+  if (in > range) {
+    in = range;
+  }
+  if (in < -range) {
+    in = -range;
+  }
+  return in;
+}
 
 
 //
@@ -118,8 +130,8 @@ public class Gripper {
   }
 
   void setIntake(double speed) {
-    leftIntake.set(speed);
-    rightIntake.set(speed);
+    leftIntake.set(ControlMode.PercentOutput,speed);
+    rightIntake.set(ControlMode.PercentOutput,speed);
   }
 
 //
@@ -133,29 +145,34 @@ public class Gripper {
 
   //  close grabber claws
   void grabCone() {
-    grabber.set(-.5);
+    grabber.set(0.01);
     SmartDashboard.putString("grip/state", "CONE");
   }
 
   //  open grabber claws
   public void grabCube() {
-    grabber.set(.5);
+    grabber.set(0.99);
     SmartDashboard.putString("grip/state", "CUBE");
   }
 
   public void intake() {
-    setIntake(1);
+    setIntake(-0.5);
     SmartDashboard.putString("intake state", "Intaking");
   }
 
   public void release() {
-    setIntake(-1);
+    setIntake(0.5);
     SmartDashboard.putString("intake state", "Releasing");
   }
 
   public void hold() {
-    setIntake(0);
+    setIntake(0.05);
     SmartDashboard.putString("intake state", "Holding");
+  }
+
+  public void rest() {
+    setIntake(0);
+    SmartDashboard.putString("intake state", "Resting");
   }
 
   //  rotate grabber
@@ -167,12 +184,14 @@ public class Gripper {
   void theta() {
     double position;
     if (rotation) {
-      position = 0; //TODO: set actual values
+      position = 0;
     }
     else {
-      position = 1;
+      position = 22;
     }
-    rotator.set(thetaPID.calculate(thetaAngle.get(), position));
+    double speed = clamp(thetaPID.calculate(thetaAngle.get(), position), 0.4); 
+    rotator.set(ControlMode.PercentOutput,speed);
+    SmartDashboard.putNumber("grip/rotate", speed);
   }
 
 //
@@ -233,8 +252,7 @@ double gamepieceInches() {
     control = userControl;
     this.driver = driver;
     
-    grabber = new Servo(0);
-    rotator = new Spark(0);
+    grabber = new Servo(config.ksp_grip);
 
     // Create a new Counter object in two-pulse mode
     lidar = new Counter(Counter.Mode.kSemiperiod);
@@ -242,6 +260,14 @@ double gamepieceInches() {
     lidar.setUpSource(config.kdi_gamepiecesense);
     // Set the encoder to count pulse duration from rising edge to falling edge
     lidar.setSemiPeriodMode(true);
+
+    thetaAngle = new Encoder(9, 8);
+
+    leftIntake = new TalonSRX(config.kmc_leftintake);
+    rightIntake = new TalonSRX(config.kmc_rightintake);
+    rotator = new TalonSRX(config.kmc_theta);
+    leftIntake.setNeutralMode(NeutralMode.Brake);
+    rightIntake.setNeutralMode(NeutralMode.Brake);
     
     SmartDashboard.putNumber("gripper/kP",thetaPID.getP());
     SmartDashboard.putNumber("gripper/kI",thetaPID.getI());
@@ -259,26 +285,34 @@ double gamepieceInches() {
 //  does everything necessary when the robot is enabled, either autonomous or teleoperated
   public void run() {
     if (c_cube()) {
-      grabCone();
-    }
-    if (c_cone()) {
       grabCube();
     }
-    if (c_intake() && !c_release() && gamepieceInches() > config.kk_holdrange /*TODO: replace this with an actual value */) {
+    if (c_cone()) {
+      grabCone();
+    }
+    if (c_intake() && !c_release()) {
       intake();
     }
     else if (c_release() && !c_intake()) {
       release();
     }
     else {
-      hold();
+      if (SmartDashboard.getString("grip/state", null).equals("CONE")) {
+        rest();
+      }
+      else if (SmartDashboard.getString("intake state", null).equals("Intaking")) {
+        hold();
+      }
+      else {
+        rest();
+      }
     }
     double armAngle = SmartDashboard.getNumber("elevation/angle", 0);
     if (armAngle < -5 ) {
-      rotate(true);
+      rotate(false);
     }
     if (armAngle > 5) {
-      rotate(false);
+      rotate(true);
     }
     theta();
   }
@@ -295,6 +329,7 @@ double gamepieceInches() {
   public void idle() {
     SmartDashboard.putNumber("grip/sense Inches", gamepieceInches());
     SmartDashboard.putBoolean("grip/autograb", autograb);
+    SmartDashboard.putNumber("grip/theta", thetaAngle.get());
   }
 
   

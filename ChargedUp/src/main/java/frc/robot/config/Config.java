@@ -134,7 +134,7 @@ public final int kj_rightfar = 11; // base right far
 // gripper parameters
   public final double kk_holdrange = 2.2; /* inches */ 
 
-  public final double kP_theta = 0.1;
+  public final double kP_theta = 0.5;
   public final double kI_theta = 0.0;
   public final double kD_theta = 0.0;
 
@@ -149,6 +149,9 @@ public final int kj_rightfar = 11; // base right far
   public final int kmc_right2 = 3;
   public final int kmc_right3 = 5;
   public final boolean kk_rightinvert = true;
+  public final int kmc_rightintake = 12;
+  public final int kmc_leftintake = 10;
+  public final int kmc_theta = 11;
 // -- arm --
   public final int kmc_elevate = 7;
   public final boolean kk_elevateinvert = true;
@@ -171,6 +174,9 @@ public final int kdi_slideleft = 0;
 public final int kdi_slideright = 1;
 public final int kdi_gamepiecesense = 2;
 public final int kdi_forcearmcoast = 3;
+
+// Servos
+public final int ksp_grip = 1;
 
 // Digital outputs
 public final int kdo_color1 = 4;

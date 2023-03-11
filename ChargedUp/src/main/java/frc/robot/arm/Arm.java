@@ -15,6 +15,8 @@
 //
 package frc.robot.arm;
 
+import java.math.*;
+
 //  operator control is an ATTACK 3 joystick
 import edu.wpi.first.wpilibj.Joystick;
 
@@ -463,8 +465,18 @@ public void auto_slide(double position) {
     run_elevation();
     run_extension();
     run_slide();
+    bounding();
   } 
 
+  private void bounding() {
+    double elevationRadians = (elevationangle()/180) * Math.PI + Math.PI/2;
+    if (Math.sin(elevationRadians) * (extensioninches() + config.kpc_armlength) > config.kpc_maxheight) {
+      auto_extend(extensioninches() - 1);
+    }
+    else if (elevationRadians < 0 && Math.cos(elevationRadians)*(extensioninches() + config.kpc_armlength) > config.kpc_maxlength) {
+      auto_extend(extensioninches() - 1);
+    }
+  }
 
 //
 //   ###   ####   #      #####  

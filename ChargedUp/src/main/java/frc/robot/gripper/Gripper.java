@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 //  actuator is a pair of pneumatic cylinders plumbed to a double solenoid wired to a Pneumatic Control Module
 import edu.wpi.first.wpilibj.Servo;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
@@ -77,6 +78,10 @@ public class Gripper {
 
   //  rotation set point: true is for forward, false is for backwards
   boolean rotation = true;
+
+  GripperState state = GripperState.CONEIN;
+
+  Timer releaseTimer = new Timer();
 
   PIDController thetaPID = new PIDController(config.kP_theta, config.kI_theta, config.kD_theta);
 
@@ -147,26 +152,40 @@ private double clamp (double in, double range) {
   void grabCone() {
     grabber.set(0.01);
     SmartDashboard.putString("grip/state", "CONE");
+    state = GripperState.CONEOUT;
   }
 
   //  open grabber claws
   public void grabCube() {
     grabber.set(0.99);
     SmartDashboard.putString("grip/state", "CUBE");
+    state = GripperState.CUBEOUT;
   }
 
   public void intake() {
     setIntake(-0.5);
     SmartDashboard.putString("intake state", "Intaking");
+    if (state == GripperState.CUBEOUT) {
+      state = GripperState.CUBEIN;
+    }
+    else if (state == GripperState.CONEOUT) {
+      state = GripperState.CONEIN;
+    }
   }
 
   public void release() {
-    setIntake(0.5);
+    setIntake(0.25);
     SmartDashboard.putString("intake state", "Releasing");
+    if (state == GripperState.CUBEIN) {
+      state = GripperState.CUBEOUT;
+    }
+    else if (state == GripperState.CONEIN) {
+      state = GripperState.CONEOUT;
+    }
   }
 
   public void hold() {
-    setIntake(0.05);
+    setIntake(-0.1);
     SmartDashboard.putString("intake state", "Holding");
   }
 
@@ -223,6 +242,12 @@ double gamepieceInches() {
 //  #   #   ###     #     ###   
 //
 //  public functions for autonomous input
+
+  public void auto_release () {
+    state = GripperState.AUTORELEASE;
+    releaseTimer.reset();
+    releaseTimer.start();
+  }
 
   /* Deprecated
   // true to close claw; false to open claw
@@ -297,14 +322,18 @@ double gamepieceInches() {
       release();
     }
     else {
-      if (SmartDashboard.getString("grip/state", null).equals("CONE")) {
-        rest();
-      }
-      else if (SmartDashboard.getString("intake state", null).equals("Intaking")) {
-        hold();
-      }
-      else {
-        rest();
+      switch (state) {
+        case CUBEIN:
+          hold();
+          break;
+        case AUTORELEASE:
+          release();
+          if(releaseTimer.hasElapsed(0.5)) {
+            state = GripperState.CONEOUT;
+          }
+          break;
+        default:
+          rest();
       }
     }
     double armAngle = SmartDashboard.getNumber("elevation/angle", 0);
@@ -344,6 +373,10 @@ double gamepieceInches() {
   public void test() {
     // there's nothing special to do because normal operation is already sufficient to test the single actuator
     run();
+  }
+
+  enum GripperState {
+    CUBEIN, CUBEOUT, CONEIN, CONEOUT, AUTORELEASE;
   }
 
 // end of Gripper class

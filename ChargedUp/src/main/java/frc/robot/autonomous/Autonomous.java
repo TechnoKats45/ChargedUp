@@ -197,7 +197,7 @@ private void doScorLeav() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-85);
+      arm.auto_elevate(-90);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -208,7 +208,7 @@ private void doScorLeav() {
       break;
     case "Settled":
       if(timestamp + 1000 <= System.currentTimeMillis()) {
-        gripper.release();
+        gripper.auto_release();
         timestamp = System.currentTimeMillis();
         setstate("Placed");
       }
@@ -238,7 +238,7 @@ public void doScor() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-85);
+      arm.auto_elevate(-90);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -249,7 +249,7 @@ public void doScor() {
       break;
     case "Settled":
       if(timestamp + 1000 <= System.currentTimeMillis()) {
-        gripper.release();
+        gripper.auto_release();
         timestamp = System.currentTimeMillis();
         setstate("Placed");
       }
@@ -320,7 +320,7 @@ private void doScorDock() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-85);
+      arm.auto_elevate(-90);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -331,7 +331,7 @@ private void doScorDock() {
       break;
     case "Settled":
       if(timestamp + 1000 <= System.currentTimeMillis()) {
-        gripper.release();
+        gripper.auto_release();
         timestamp = System.currentTimeMillis();
         setstate("Placed");
       }
@@ -382,7 +382,7 @@ private void doScorLeavDock() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-85);
+      arm.auto_elevate(-90);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -393,7 +393,7 @@ private void doScorLeavDock() {
       break;
     case "Settled":
       if(timestamp + 1000 <= System.currentTimeMillis()) {
-        gripper.release();
+        gripper.auto_release();
         timestamp = System.currentTimeMillis();
         setstate("Placed");
       }

@@ -74,9 +74,9 @@ public final int kj_rightfar = 11; // base right far
   public final double kk_elevationmax = 107;
 
   //constants to limit arm movement
-  public static final double kpc_armlength = 27.0;
-  public static final double kpc_maxheight = 52.0;
-  public static final double kpc_maxlength = 48.0;
+  public final double kpc_armlength = 27.0;
+  public final double kpc_maxheight = 40.0;
+  public final double kpc_maxlength = 36.0;
 
 
   // @@ presets: elevation degrees, extension inches

@@ -134,6 +134,10 @@ private double clamp (double in, double range) {
     return control.getRawButton(config.kj_leftfar);
   }
 
+  boolean c_gripflip() {
+    return control.getRawButton(config.kj_trig);
+  }
+
   void setIntake(double speed) {
     leftIntake.set(ControlMode.PercentOutput,speed);
     rightIntake.set(ControlMode.PercentOutput,speed);
@@ -150,14 +154,14 @@ private double clamp (double in, double range) {
 
   //  close grabber claws
   void grabCone() {
-    grabber.set(0.01);
+    grabber.set(0.55);
     SmartDashboard.putString("grip/state", "CONE");
     state = GripperState.CONEOUT;
   }
 
   //  open grabber claws
   public void grabCube() {
-    grabber.set(0.99);
+    grabber.set(1);
     SmartDashboard.putString("grip/state", "CUBE");
     state = GripperState.CUBEOUT;
   }
@@ -323,6 +327,7 @@ double gamepieceInches() {
     }
     else {
       switch (state) {
+        case CONEIN:
         case CUBEIN:
           hold();
           break;
@@ -337,13 +342,19 @@ double gamepieceInches() {
       }
     }
     double armAngle = SmartDashboard.getNumber("elevation/angle", 0);
-    if (armAngle < -5 ) {
-      rotate(false);
+    if (!c_gripflip()) {
+      if (armAngle < -5 ) {
+        rotate(false);
+      }
+      if (armAngle > 5) {
+        rotate(true);
+      }
+      theta();
     }
-    if (armAngle > 5) {
-      rotate(true);
+    else {
+      rotator.set(ControlMode.PercentOutput, -control.getX());
+      thetaAngle.reset();
     }
-    theta();
   }
 
 

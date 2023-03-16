@@ -197,7 +197,7 @@ private void doScorLeav() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-90);
+      arm.auto_elevate(-75);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -216,7 +216,7 @@ private void doScorLeav() {
     case "Placed":
       if (timestamp + 500 <= System.currentTimeMillis()) {
         arm.auto_extend(0);
-        arm.auto_elevate(90);
+        arm.auto_elevate(45);
         setstate("Scored");
       }
       break;
@@ -238,7 +238,7 @@ public void doScor() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-90);
+      arm.auto_elevate(-75);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -320,7 +320,7 @@ private void doScorDock() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-90);
+      arm.auto_elevate(-75);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -382,7 +382,7 @@ private void doScorLeavDock() {
   switch (state) {
     case "Start":
       arm.auto_extend(10);
-      arm.auto_elevate(-90);
+      arm.auto_elevate(-73);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -411,7 +411,7 @@ private void doScorLeavDock() {
       break;
     case "Out":
       if(drivebase.attarget()){
-        drivebase.auto_drive(-100);
+        drivebase.auto_drive(-115);
         setstate("On Dock");
       }
       break;

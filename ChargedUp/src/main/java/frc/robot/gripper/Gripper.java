@@ -26,9 +26,14 @@ import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 
+// the following three lines are for the dual redline motors on Gripper II
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+// the following three lines are for the single NEO550 motor on Gripper III
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
 //  sensor is a rangefinder with PWM output, readable by a RoboRIO counter on a digital input
@@ -67,6 +72,8 @@ public class Gripper {
   TalonSRX leftIntake;
   TalonSRX rightIntake;
 
+  CANSparkMax intake;
+
   //  rangefinder to detect game pieces in grabber
   Counter lidar;
 
@@ -79,7 +86,7 @@ public class Gripper {
   //  rotation set point: true is for forward, false is for backwards
   boolean rotation = true;
 
-  GripperState state = GripperState.CONEIN;
+  GripperState clawState = GripperState.CONEIN;
 
   Timer releaseTimer = new Timer();
 
@@ -139,8 +146,13 @@ private double clamp (double in, double range) {
   }
 
   void setIntake(double speed) {
-    leftIntake.set(ControlMode.PercentOutput,speed);
-    rightIntake.set(ControlMode.PercentOutput,speed);
+    if (config.grab_twinredline) {
+      leftIntake.set(ControlMode.PercentOutput,speed);
+      rightIntake.set(ControlMode.PercentOutput,speed);  
+    }
+    if (config.grab_neo550) {
+      intake.set(speed);
+    }
   }
 
 //
@@ -155,36 +167,36 @@ private double clamp (double in, double range) {
   //  close grabber claws
   void grabCone() {
     grabber.set(0.55);
-    SmartDashboard.putString("grip/state", "CONE");
-    state = GripperState.CONEOUT;
+    SmartDashboard.putString("gripper/state", "CONE");
+    clawState = GripperState.CONEOUT;
   }
 
   //  open grabber claws
   public void grabCube() {
     grabber.set(1);
-    SmartDashboard.putString("grip/state", "CUBE");
-    state = GripperState.CUBEOUT;
+    SmartDashboard.putString("gripper/state", "CUBE");
+    clawState = GripperState.CUBEOUT;
   }
 
   public void intake() {
     setIntake(-0.5);
     SmartDashboard.putString("intake state", "Intaking");
-    if (state == GripperState.CUBEOUT) {
-      state = GripperState.CUBEIN;
+    if (clawState == GripperState.CUBEOUT) {
+      clawState = GripperState.CUBEIN;
     }
-    else if (state == GripperState.CONEOUT) {
-      state = GripperState.CONEIN;
+    else if (clawState == GripperState.CONEOUT) {
+      clawState = GripperState.CONEIN;
     }
   }
 
   public void release() {
     setIntake(0.25);
     SmartDashboard.putString("intake state", "Releasing");
-    if (state == GripperState.CUBEIN) {
-      state = GripperState.CUBEOUT;
+    if (clawState == GripperState.CUBEIN) {
+      clawState = GripperState.CUBEOUT;
     }
-    else if (state == GripperState.CONEIN) {
-      state = GripperState.CONEOUT;
+    else if (clawState == GripperState.CONEIN) {
+      clawState = GripperState.CONEOUT;
     }
   }
 
@@ -208,13 +220,12 @@ private double clamp (double in, double range) {
     double position;
     if (rotation) {
       position = 0;
-    }
-    else {
+    } else {
       position = 22;
     }
     double speed = clamp(thetaPID.calculate(thetaAngle.get(), position), 0.3); 
     rotator.set(ControlMode.PercentOutput,speed);
-    SmartDashboard.putNumber("grip/rotate", speed);
+    SmartDashboard.putNumber("gripper/rotate", speed);
   }
 
 //
@@ -248,7 +259,7 @@ double gamepieceInches() {
 //  public functions for autonomous input
 
   public void auto_release () {
-    state = GripperState.AUTORELEASE;
+    clawState = GripperState.AUTORELEASE;
     releaseTimer.reset();
     releaseTimer.start();
   }
@@ -292,11 +303,18 @@ double gamepieceInches() {
 
     thetaAngle = new Encoder(9, 8);
 
-    leftIntake = new TalonSRX(config.kmc_leftintake);
-    rightIntake = new TalonSRX(config.kmc_rightintake);
+    if (config.grab_twinredline) {
+      leftIntake = new TalonSRX(config.kmc_leftintake);
+      rightIntake = new TalonSRX(config.kmc_rightintake);  
+      leftIntake.setNeutralMode(NeutralMode.Brake);
+      rightIntake.setNeutralMode(NeutralMode.Brake);
+    }
+    if (config.grab_neo550) {
+      intake = new CANSparkMax(config.kmc_intake, MotorType.kBrushless);
+      intake.setInverted(config.kk_intakeinvert);
+      intake.setIdleMode(IdleMode.kBrake);  
+    }
     rotator = new TalonSRX(config.kmc_theta);
-    leftIntake.setNeutralMode(NeutralMode.Brake);
-    rightIntake.setNeutralMode(NeutralMode.Brake);
     
     SmartDashboard.putNumber("gripper/kP",thetaPID.getP());
     SmartDashboard.putNumber("gripper/kI",thetaPID.getI());
@@ -326,7 +344,7 @@ double gamepieceInches() {
       release();
     }
     else {
-      switch (state) {
+      switch (clawState) {
         case CONEIN:
         case CUBEIN:
           hold();
@@ -334,7 +352,7 @@ double gamepieceInches() {
         case AUTORELEASE:
           release();
           if(releaseTimer.hasElapsed(0.5)) {
-            state = GripperState.CONEOUT;
+            clawState = GripperState.CONEOUT;
           }
           break;
         default:
@@ -350,8 +368,7 @@ double gamepieceInches() {
         rotate(true);
       }
       theta();
-    }
-    else {
+    } else {
       rotator.set(ControlMode.PercentOutput, -control.getX());
       thetaAngle.reset();
     }
@@ -367,9 +384,15 @@ double gamepieceInches() {
 //
 //  does everything necessary when the robot is running, either enabled or disabled
   public void idle() {
-    SmartDashboard.putNumber("grip/sense Inches", gamepieceInches());
-    SmartDashboard.putBoolean("grip/autograb", autograb);
-    SmartDashboard.putNumber("grip/theta", thetaAngle.get());
+    SmartDashboard.putNumber("gripper/sense Inches", gamepieceInches());
+    SmartDashboard.putBoolean("gripper/autograb", autograb);
+    SmartDashboard.putNumber("gripper/theta", thetaAngle.get());
+    if (config.grab_twinredline) {
+      SmartDashboard.putNumber("gripper/grab current", leftIntake.getSupplyCurrent());
+    }
+    if (config.grab_neo550) {
+      SmartDashboard.putNumber("gripper/grab current", intake.getOutputCurrent());
+    }
   }
 
   
@@ -383,6 +406,9 @@ double gamepieceInches() {
 //  provides special support for testing individual subsystem functionality
   public void test() {
     // there's nothing special to do because normal operation is already sufficient to test the single actuator
+    double throttle = control.getRawAxis(2);
+    grabber.set(throttle);
+    SmartDashboard.putNumber("gripper/claw", throttle);
     run();
   }
 

@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.DriverStation.*;
 import frc.robot.drivebase.*;
 import frc.robot.arm.*;
 import frc.robot.gripper.*;
+import frc.robot.config.*;
 
 //  imports (controllers, actuators, sensors, communication)
 
@@ -64,6 +65,8 @@ private Gripper gripper;
 //  peristent measurement variables
 private long timestamp;
 
+private Config config;
+
 //
 //  #####  #   #  #   #   ###   #####   ###    ###   #   #   ####
 //  #      #   #  ##  #  #   #    #      #    #   #  ##  #  #
@@ -74,6 +77,15 @@ private long timestamp;
 private void setstate(String p_state) {
   state = p_state;
   SmartDashboard.putString("auto state",state);
+}
+
+private void red_auto_turn(int direction) {
+  if (alliance == Alliance.Red) {
+    drivebase.auto_turn(direction);
+  } else {
+    drivebase.auto_turn(-direction);
+  }
+  
 }
 
 //
@@ -117,7 +129,7 @@ private void doCustom() {
       break;
     case "Arm Straight":
       if (arm.elevation_at_target()) {
-        drivebase.auto_turn(90);
+        red_auto_turn(90);
         setstate("Turn Right");
       }
       break;
@@ -129,7 +141,7 @@ private void doCustom() {
       break;
     case "Drive Right":
       if (drivebase.attarget()) {
-        drivebase.auto_turn(90);
+        red_auto_turn(90);
         setstate("Turn Back");
       }
       break;
@@ -196,8 +208,8 @@ private void doLeav() {
 private void doScorLeav() {
   switch (state) {
     case "Start":
-      arm.auto_extend(10);
-      arm.auto_elevate(-75);
+      arm.auto_extend(config.kk_extension_ScoreHigh);
+      arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -237,8 +249,8 @@ private void doScorLeav() {
 public void doScor() {
   switch (state) {
     case "Start":
-      arm.auto_extend(10);
-      arm.auto_elevate(-75);
+      arm.auto_extend(config.kk_extension_ScoreHigh);
+      arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -319,8 +331,8 @@ private void doScorLeavScordiff() {
 private void doScorDock() {
   switch (state) {
     case "Start":
-      arm.auto_extend(10);
-      arm.auto_elevate(-75);
+      arm.auto_extend(config.kk_extension_ScoreHigh);
+      arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -350,10 +362,10 @@ private void doScorDock() {
     case "On Dock":
       if (drivebase.attarget()) {
         if (drivebase.pitch() > 0.5) {
-          drivebase.auto_drive(1);
+          drivebase.auto_drive(3);
         }
         else if (drivebase.pitch() < -0.5) {
-          drivebase.auto_drive(-1);
+          drivebase.auto_drive(-3);
         }
         else {
           setstate("End");
@@ -381,8 +393,8 @@ private void doScorLeavDock() {
   
   switch (state) {
     case "Start":
-      arm.auto_extend(10);
-      arm.auto_elevate(-73);
+      arm.auto_extend(config.kk_extension_ScoreHigh);
+      arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
       break;
     case "Arm Set":
@@ -516,6 +528,8 @@ private void doScorLeavScorScordiff() {
     drivebase = p_drivebase;
     arm = p_arm;
     gripper = p_gripper;
+
+    config = new Config();
 
     // populate auto routine chooser
     menuOptionDefault(autoDefault);

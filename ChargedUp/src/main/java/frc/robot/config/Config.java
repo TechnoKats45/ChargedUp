@@ -80,14 +80,17 @@ public final int kj_rightfar = 11; // base right far
 
 
   // @@ presets: elevation degrees, extension inches
-  public final double kk_elevation_preset0 = 63;
-  public final double kk_extension_preset0 = 8;
+  // preset0 is "upper double station"
+  public final double kk_elevation_preset0 = 53;
+  public final double kk_extension_preset0 = 1;
   public final double kk_elevation_preset1 = -123;
   public final double kk_extension_preset1 = 0;
   public final double kk_elevation_preset2 = -65;
   public final double kk_extension_preset2 = 3.5;
   public final double kk_elevation_preset3 = -57;
   public final double kk_extension_preset3 = 17;
+  public final double kk_elevation_ScoreHigh = -73;
+  public final double kk_extension_ScoreHigh = 10;
 
 
   public final double kk_elevate_rate = 2.0; /* 1/2 second to full power */
@@ -154,8 +157,17 @@ public final int kj_rightfar = 11; // base right far
   public final int kmc_right2 = 3;
   public final int kmc_right3 = 5;
   public final boolean kk_rightinvert = true;
+// -- gripper --
+  public final boolean grab_twinredline = true;
+  public final boolean grab_neo550 = false;
+  // vvv --- for dual redline motors (on TalonSRX):
   public final int kmc_rightintake = 12;
   public final int kmc_leftintake = 10;
+  // ^^^ ---
+  // vvv --- for single NEO550 motor (on SparkMAX):
+  public final int kmc_intake = 10;
+  public final boolean kk_intakeinvert = false;
+  // ^^^ ---
   public final int kmc_theta = 11;
 // -- arm --
   public final int kmc_elevate = 7;

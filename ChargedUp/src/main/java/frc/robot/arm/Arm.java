@@ -15,8 +15,6 @@
 //
 package frc.robot.arm;
 
-import java.math.*;
-
 //  operator control is an ATTACK 3 joystick
 import edu.wpi.first.wpilibj.Joystick;
 

@@ -201,7 +201,12 @@ private double clamp (double in, double range) {
   }
 
   public void hold() {
-    setIntake(-0.1);
+    if (config.grab_twinredline) {
+      setIntake(-0.1);
+    }
+    else {
+      setIntake(0);
+    }
     SmartDashboard.putString("intake state", "Holding");
   }
 

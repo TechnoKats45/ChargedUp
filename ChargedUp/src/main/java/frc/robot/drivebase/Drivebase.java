@@ -181,7 +181,7 @@ private double clamp (double in, double range) {
   private double c_speed() {
      double speed = deadband(-control.getLeftY(),0.2);
      if (c_vernier()) {
-      speed /= 2;
+      speed /= 3;
      } else {
       speed = speed*speed*speed;
      }

@@ -158,8 +158,8 @@ public final int kj_rightfar = 11; // base right far
   public final int kmc_right3 = 5;
   public final boolean kk_rightinvert = true;
 // -- gripper --
-  public final boolean grab_twinredline = false;
-  public final boolean grab_neo550 = true;
+  public final boolean grab_twinredline = true;
+  public final boolean grab_neo550 = false;
   // vvv --- for dual redline motors (on TalonSRX):
   public final int kmc_rightintake = 12;
   public final int kmc_leftintake = 10;

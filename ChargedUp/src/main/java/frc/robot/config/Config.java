@@ -28,6 +28,7 @@ public final int kj_rightfar = 11; // base right far
 
 // drivebase parameters
   public final double kk_accel = 1.0; // acceleration limit
+  public final double kk_level = 5.0; // degrees from vertical to be considered level
 
   public final double kk_wheeldiameter = 6;
   public final double kk_gearreduction = 7.56;
@@ -145,6 +146,9 @@ public final int kj_rightfar = 11; // base right far
   public final double kP_theta = 0.5;
   public final double kI_theta = 0.0;
   public final double kD_theta = 0.0;
+
+  public final double kk_servocube = 0.87;
+  public final double kk_servocone = 0.39;
 
 
 // CAN motor control IDs

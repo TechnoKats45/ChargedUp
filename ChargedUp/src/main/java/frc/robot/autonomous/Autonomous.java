@@ -361,10 +361,10 @@ private void doScorDock() {
       break;
     case "On Dock":
       if (drivebase.attarget()) {
-        if (drivebase.pitch() > 0.5) {
-          drivebase.auto_drive(3);
+        if (drivebase.pitch() > +config.kk_level) {
+          drivebase.auto_drive(+3);
         }
-        else if (drivebase.pitch() < -0.5) {
+        else if (drivebase.pitch() < -config.kk_level) {
           drivebase.auto_drive(-3);
         }
         else {

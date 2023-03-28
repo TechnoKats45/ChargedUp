@@ -60,7 +60,7 @@ public class Gripper {
   XboxController driver;
 
   //  servo for grabber
-  Servo grabber;
+  Servo grabberclaw;
 
   //  motorized theta for rotation
   TalonSRX rotator;
@@ -166,36 +166,44 @@ private double clamp (double in, double range) {
 
   //  close grabber claws
   void grabCone() {
-    grabber.set(0.55);
+    grabberclaw.set(config.kk_servocone);
     SmartDashboard.putString("gripper/state", "CONE");
     clawState = GripperState.CONEOUT;
   }
 
   //  open grabber claws
   public void grabCube() {
-    grabber.set(1);
+    grabberclaw.set(config.kk_servocube);
     SmartDashboard.putString("gripper/state", "CUBE");
     clawState = GripperState.CUBEOUT;
   }
 
   public void intake() {
-    setIntake(-0.5);
+    if (config.grab_twinredline) {
+      setIntake(-0.5);
+    }
+    if (config.grab_neo550) {
+      setIntake(-1.0);
+    }
     SmartDashboard.putString("intake state", "Intaking");
     if (clawState == GripperState.CUBEOUT) {
       clawState = GripperState.CUBEIN;
-    }
-    else if (clawState == GripperState.CONEOUT) {
+    } else if (clawState == GripperState.CONEOUT) {
       clawState = GripperState.CONEIN;
     }
   }
 
   public void release() {
-    setIntake(0.25);
+    if (config.grab_twinredline) {
+      setIntake(0.25);
+    }
+    if (config.grab_neo550) {
+      setIntake(0.25);
+    }
     SmartDashboard.putString("intake state", "Releasing");
     if (clawState == GripperState.CUBEIN) {
       clawState = GripperState.CUBEOUT;
-    }
-    else if (clawState == GripperState.CONEIN) {
+    } else if (clawState == GripperState.CONEIN) {
       clawState = GripperState.CONEOUT;
     }
   }
@@ -203,8 +211,8 @@ private double clamp (double in, double range) {
   public void hold() {
     if (config.grab_twinredline) {
       setIntake(-0.1);
-    }
-    else {
+    } 
+    if (config.grab_neo550) {
       setIntake(0);
     }
     SmartDashboard.putString("intake state", "Holding");
@@ -297,7 +305,7 @@ double gamepieceInches() {
     control = userControl;
     this.driver = driver;
     
-    grabber = new Servo(config.ksp_grip);
+    grabberclaw = new Servo(config.ksp_grip);
 
     // Create a new Counter object in two-pulse mode
     lidar = new Counter(Counter.Mode.kSemiperiod);
@@ -345,11 +353,9 @@ double gamepieceInches() {
     }
     if (c_intake() && !c_release()) {
       intake();
-    }
-    else if (c_release() && !c_intake()) {
+    } else if (c_release() && !c_intake()) {
       release();
-    }
-    else {
+    } else {
       switch (clawState) {
         case CONEIN:
         case CUBEIN:
@@ -411,10 +417,11 @@ double gamepieceInches() {
 //
 //  provides special support for testing individual subsystem functionality
   public void test() {
-    // there's nothing special to do because normal operation is already sufficient to test the single actuator
-    double throttle = control.getRawAxis(2);
-    grabber.set(throttle);
+    // control claw 
+    double throttle = control.getThrottle();
+    grabberclaw.set(throttle);
     SmartDashboard.putNumber("gripper/claw", throttle);
+    // normal operation is already sufficient to test intake and wrist
     run();
   }
 

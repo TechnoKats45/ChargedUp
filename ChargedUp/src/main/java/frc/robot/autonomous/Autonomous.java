@@ -118,6 +118,7 @@ private void doDefault() {
 private void doCustom() {
   switch (state) {
     case "Start":
+      drivebase.auto_turn(0);
       drivebase.auto_drive(48);
       setstate("Forward");
       break;
@@ -175,6 +176,7 @@ private void doCustom() {
 private void doLeav() {
   switch (state) {
     case "Start":
+      drivebase.auto_turn(0);
       drivebase.auto_drive(168);
       setstate("End");
     case "End":
@@ -208,6 +210,7 @@ private void doLeav() {
 private void doScorLeav() {
   switch (state) {
     case "Start":
+      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -249,6 +252,7 @@ private void doScorLeav() {
 public void doScor() {
   switch (state) {
     case "Start":
+      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -331,6 +335,7 @@ private void doScorLeavScordiff() {
 private void doScorDock() {
   switch (state) {
     case "Start":
+      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -362,13 +367,15 @@ private void doScorDock() {
     case "On Dock":
       if (drivebase.attarget()) {
         if (drivebase.pitch() > +config.kk_level) {
-          drivebase.auto_drive(+3);
+          drivebase.auto_drive(+4);
         }
         else if (drivebase.pitch() < -config.kk_level) {
-          drivebase.auto_drive(-3);
+          drivebase.auto_drive(-4);
         }
         else {
+          /* don't ever leave the autobalance section
           setstate("End");
+          */
         }
       }
       break;
@@ -393,6 +400,7 @@ private void doScorLeavDock() {
   
   switch (state) {
     case "Start":
+      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -422,22 +430,28 @@ private void doScorLeavDock() {
       setstate("Out");
       break;
     case "Out":
-      if(drivebase.attarget()){
+      if (drivebase.attarget()) {
         drivebase.auto_drive(-115);
-        setstate("On Dock");
+        setstate("Docking");
       }
       break;
-      case "On Dock":
+    case "Docking":
       if (drivebase.attarget()) {
-        if (drivebase.pitch() > 0.5) {
-          drivebase.auto_drive(1);
-        }
-        else if (drivebase.pitch() < -0.5) {
-          drivebase.auto_drive(-1);
-        }
-        else {
-          setstate("End");
-        }
+        setstate("Balancing");
+      }
+      break;
+    case "Balancing":
+      if (drivebase.pitch() > config.kk_level) {
+        drivebase.auto_drive_powerful(4);
+      }
+      else if (drivebase.pitch() < -config.kk_level) {
+        drivebase.auto_drive_powerful(-4);
+      }
+      else {
+        drivebase.auto_drive(0);
+        /* don't ever leave the autobalance section
+        setstate("End");
+        */
       }
       break;
     case "End":

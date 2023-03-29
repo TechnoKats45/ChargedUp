@@ -61,6 +61,8 @@ Joystick control;
 CANSparkMax elevationmotor;
 Spark slidemotor;
 CANSparkMax extensionmotor;
+private double elevationclamp = 0.4;
+private double extensionclamp = 0.3;
 
 private Config config = new Config();
 
@@ -114,6 +116,18 @@ private double deadband(double in, double band) {
   }
   return value / (1-band);
 }
+
+// limit output to a specified maximum
+private double clamp (double in, double range) {
+  if (in > range) {
+    in = range;
+  }
+  if (in < -range) {
+    in = -range;
+  }
+  return in;
+}
+
 
 boolean c_extend() { // extend arm
     return (control.getRawButton(config.kj_up) && extensioninches() < 20);
@@ -238,11 +252,11 @@ boolean c_preset3() { // top node level
 
 void elevate(double speed) {
     SmartDashboard.putNumber("elevation/speed", speed);
-    elevationmotor.set(speed);
+    elevationmotor.set(clamp(speed, elevationclamp));
 }
 void extend(double speed) {
     SmartDashboard.putNumber("extension/speed", speed);
-    extensionmotor.set(speed);
+    extensionmotor.set(clamp(speed, extensionclamp));
 }
 void slide(double speed) {
     SmartDashboard.putNumber("slide/speed", speed);
@@ -429,9 +443,11 @@ public void auto_slide(double position) {
     double val = 0;
     if (c_extend()) {
       val = 0.5;
+      extensionclamp = 0.5;
     }
     if (c_retract()) {
       val = -0.5;
+      extensionclamp = 0.5;
     }
     if (val != 0) {
       autoextend = false;
@@ -441,6 +457,7 @@ public void auto_slide(double position) {
     bounding();
     if (autoextend) {
       val = extension_pid.calculate(extensioninches(), extension_target);
+      extensionclamp = 0.4;
     }
     extend(val);
   }

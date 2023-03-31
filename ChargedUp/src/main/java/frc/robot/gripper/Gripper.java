@@ -384,6 +384,7 @@ double gamepieceInches() {
       rotator.set(ControlMode.PercentOutput, -control.getX());
       thetaAngle.reset();
     }
+    theta();
   }
 
 

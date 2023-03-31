@@ -146,11 +146,7 @@ boolean c_right() { // slide arm right
 }
 
 double c_elevate() { // elevation motor control
-    double speed = deadband(-control.getY(), 0.1);
-    if (control.getRawButton(config.kj_centerleft)) {
-      speed *= .33;
-    }
-    return speed;
+    return deadband(-control.getY(), 0.2);
 }
 
 boolean c_enable() { // enable manual arm control
@@ -400,9 +396,9 @@ public void auto_slide(double position) {
     if (c_resetangle()) {
         anglereset(0);
     }
-    /*if (c_preset0()) {
+    if (c_preset0()) {
       auto_elevate(config.kk_elevation_preset0);
-    }*/
+    }
     if (c_preset1()) {
       auto_elevate(config.kk_elevation_preset1);
     }
@@ -412,7 +408,7 @@ public void auto_slide(double position) {
     if (c_preset3()) {
       auto_elevate(config.kk_elevation_preset3);
     }
-    double val = c_elevate();
+    double val = deadband(c_elevate(),0.1);
     if (val != 0) {
       autoelevate = false;
     } else if (!autoelevate) {
@@ -428,9 +424,9 @@ public void auto_slide(double position) {
     if (c_resetextension()) {
         inchesreset(0); 
     }
-    /*if (c_preset0()) {
+    if (c_preset0()) {
       auto_extend(config.kk_extension_preset0);
-    }*/
+    }
     if (c_preset1()) {
       auto_extend(config.kk_extension_preset1);
     }

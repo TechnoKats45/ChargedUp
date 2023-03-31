@@ -210,7 +210,6 @@ private void doLeav() {
 private void doScorLeav() {
   switch (state) {
     case "Start":
-      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -231,7 +230,7 @@ private void doScorLeav() {
     case "Placed":
       if (timestamp + 500 <= System.currentTimeMillis()) {
         arm.auto_extend(0);
-        arm.auto_elevate(45);
+        arm.auto_elevate(90);
         setstate("Scored");
       }
       break;
@@ -252,7 +251,6 @@ private void doScorLeav() {
 public void doScor() {
   switch (state) {
     case "Start":
-      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -335,7 +333,6 @@ private void doScorLeavScordiff() {
 private void doScorDock() {
   switch (state) {
     case "Start":
-      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -400,7 +397,6 @@ private void doScorLeavDock() {
   
   switch (state) {
     case "Start":
-      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -430,9 +426,9 @@ private void doScorLeavDock() {
       setstate("Out");
       break;
     case "Out":
-      if (drivebase.attarget()) {
-        drivebase.auto_drive(-115);
-        setstate("Docking");
+      if(drivebase.attarget()){
+        drivebase.auto_drive(-107);
+        setstate("On Dock");
       }
       break;
     case "Docking":

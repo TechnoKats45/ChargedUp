@@ -92,6 +92,8 @@ public class Drivebase {
     double autodrive_target = 0;
     boolean autodrive_active = false;
     boolean autodrive_powerful = false;
+    double autospeed = 0;
+    boolean autospeed_active = false;
     //  auto steering will control motors to turn to the target direction
     double autoturn_target = 0;
     boolean autoturn_active = false;
@@ -162,11 +164,8 @@ private double clamp (double in, double range) {
   private boolean c_vernier() {
     return control.getLeftBumper();
   }
-  private boolean c_cubic() {
-    return control.getRightBumper();
-  }
 
-// color indications
+  // color indications
   private boolean c_purple() {
     return control.getXButton() || control.getRightTriggerAxis() > 0.2;
   }
@@ -180,6 +179,7 @@ private double clamp (double in, double range) {
      if (c_vernier()) {
       speed /= 3;
      } else {
+      // cubic curve on joystick input means fine control at low values but still has full range
       speed = speed*speed*speed;
      }
 /* Wes's quick-and-dirty acceleration limit has been replaced with a SlewRateLimiter
@@ -378,6 +378,10 @@ private void c_update_turn_pid() {
     autoturn_target = 0;
   }
 
+  public double getAngle () {
+    return navx.getAngle();
+  }
+
   private double tilt() {
     // compute tilt from Config.kk_accelerometer axes
     // robot is rotated from navx default
@@ -391,7 +395,7 @@ private void c_update_turn_pid() {
   }
 
   public double pitch() {
-    return navx.getPitch();
+    return navx.getRoll();
   }
 
 
@@ -408,19 +412,29 @@ private void c_update_turn_pid() {
   public void auto_drive(int distance) {
     //distanceReset();
     //drive_pid.reset();
+    if (distance == 0) {
+      autodrive_target = distance();
+    }
     autodrive_target = autodrive_target+distance;
     SmartDashboard.putNumber("drive/target", autodrive_target);
     drive_pid.setSetpoint(autodrive_target);
     drive_pid.setTolerance(2);
     autodrive_active = true;
+    autodrive_powerful = false;
+    autospeed_active = false;
   }
 
   public void auto_drive_powerful(int distance) {
+    if (distance == 0) {
+      autodrive_target = distance();
+    }
     autodrive_target = autodrive_target+distance;
     SmartDashboard.putNumber("drive/target", autodrive_target);
     drive_pid.setSetpoint(autodrive_target);
     drive_pid.setTolerance(2);
+    autodrive_active = false;
     autodrive_powerful = true;
+    autospeed_active = false;
   }
 
   // turn in place left or right to a specified target angle
@@ -434,8 +448,15 @@ private void c_update_turn_pid() {
     autoturn_active = true;
   }
 
+  public void drive_power(double speed) {
+    autospeed = deadband(speed,0.1);
+    autodrive_active = false;
+    autodrive_powerful = false;
+    autospeed_active = true;
+  }
+
   public boolean attarget() {
-    return (drive_pid.atSetpoint() && turn_pid.atSetpoint());
+    return (drive_pid.atSetpoint());
   }
 
 //
@@ -508,41 +529,43 @@ private void c_update_turn_pid() {
 
     double left = 0;
     double right = 0;
-    switch (driverInputMode) {
-      case TANK:
-        left = c_leftthrottle();
-        right = c_rightthrottle();
-        break;
-      case ARCADE:
-        double speed = acceleration.calculate(c_speed());
-        double steer = c_steer();
-        left = speed+steer;
-        right = speed-steer;
-        break;
-      default:
-        left = 0;
-        right = 0;
-        break;
+    if (!autodrive_active) {
+      switch (driverInputMode) {
+        case TANK:
+          left = c_leftthrottle();
+          right = c_rightthrottle();
+          break;
+        case ARCADE:
+          double speed = acceleration.calculate(c_speed());
+          double steer = c_steer();
+          left = speed+steer;
+          right = speed-steer;
+          break;
+        default:
+          left = 0;
+          right = 0;
+          break;
+      }
     }
-    if ((left != 0) | (right != 0)) {
+    if (c_speed() != 0) {
       autodrive_active = false;
+      autodrive_powerful = false;
       autoturn_active = false;
+    }
+    if (autospeed_active) {
+      left = acceleration.calculate(autospeed);
+      right = left;
     }
     if (autodrive_active) {
       double throttle = drive_pid.calculate(distance(), autodrive_target);
       throttle = clamp(throttle, 0.2);
-      left = throttle;
-      right = throttle;
+      left = acceleration.calculate(throttle);
+      right = left;
     }
     if (autodrive_powerful) {
       double throttle = drive_pid.calculate(distance(), autodrive_target);
-      if (throttle > 0) {
-        throttle += 0.3;
-      }
-      if (throttle < 0) {
-        throttle -= 0.3;
-      }
-      throttle = clamp(throttle, 0.8);
+      throttle *= 20.0;
+      throttle = acceleration.calculate(clamp(throttle, 0.8));
       left = throttle;
       right = throttle;
     }
@@ -633,6 +656,9 @@ private void c_update_turn_pid() {
         break;
     }
     
+    if (!autoturn_active) {
+      //directionReset();
+    }
     driverInputMode = c_inputMode();
     switch (driverInputMode) {
       case TANK:

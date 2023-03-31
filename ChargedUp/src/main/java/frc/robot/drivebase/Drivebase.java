@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //  there's a LifeCam 3000 camera
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.hal.simulation.DIODataJNI;
 
 //  drive motors are NEO brushless motors using SPARK MAX speed controllers  
 import com.revrobotics.CANSparkMax;
@@ -37,6 +38,8 @@ import edu.wpi.first.wpilibj.Timer;
 
 //  NavX is plugged in to the roboRIO expansion port and uses SPI communication
 import edu.wpi.first.wpilibj.SPI;
+
+import java.security.DigestOutputStream;
 
 import com.kauailabs.navx.frc.AHRS;
 
@@ -536,12 +539,6 @@ private void c_update_turn_pid() {
     }
     if (autodrive_powerful) {
       double throttle = drive_pid.calculate(distance(), autodrive_target);
-      if (throttle > 0) {
-        throttle += 0.3;
-      }
-      if (throttle < 0) {
-        throttle -= 0.3;
-      }
       throttle = clamp(throttle, 0.8);
       left = throttle;
       right = throttle;
@@ -648,9 +645,7 @@ private void c_update_turn_pid() {
     SmartDashboard.putNumber("turn/direction", direction());
     
     SmartDashboard.putBoolean("drive/auto", autodrive_active);
-    SmartDashboard.putBoolean("drive/at setpoint", drive_pid.atSetpoint());
     SmartDashboard.putBoolean("turn/auto", autoturn_active);
-    SmartDashboard.putBoolean("turn/at setpoint", turn_pid.atSetpoint());
 
     SmartDashboard.putNumber("attitude/tilt", tilt());
   }

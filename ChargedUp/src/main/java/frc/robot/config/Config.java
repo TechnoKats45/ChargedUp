@@ -90,7 +90,7 @@ public final int kj_rightfar = 11; // base right far
   public final double kk_extension_preset2 = 3.5;
   public final double kk_elevation_preset3 = -57;
   public final double kk_extension_preset3 = 17;
-  public final double kk_elevation_ScoreHigh = -50;
+  public final double kk_elevation_ScoreHigh = -73;
   public final double kk_extension_ScoreHigh = 10;
 
 

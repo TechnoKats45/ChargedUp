@@ -13,7 +13,6 @@ package frc.robot.autonomous;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.*;
 
@@ -363,7 +362,7 @@ private void doScorDock() {
       break;
     case "Scored":
       drivebase.auto_drive(105);
-      setstate("Docking");
+      setstate("On Dock");
       break;
     case "On Dock":
       if (drivebase.attarget()) {
@@ -401,6 +400,7 @@ private void doScorLeavDock() {
   
   switch (state) {
     case "Start":
+      drivebase.auto_turn(0);
       arm.auto_extend(config.kk_extension_ScoreHigh);
       arm.auto_elevate(config.kk_elevation_ScoreHigh);
       setstate("Arm Set");
@@ -431,34 +431,24 @@ private void doScorLeavDock() {
       break;
     case "Out":
       if (drivebase.attarget()) {
-        drivebase.auto_drive(-107);
+        drivebase.auto_drive(-115);
         setstate("Docking");
       }
       break;
     case "Docking":
       if (drivebase.attarget()) {
-        setstate("Balance");
+        setstate("Balancing");
       }
       break;
-    case "Balance":
-      if (drivebase.pitch() < -config.kk_level || drivebase.pitch() > config.kk_level) {
-        drivebase.drive_power(drivebase.pitch()/-24.0);
-      } else {
-        drivebase.drive_power(0);
-      }
-      break;
-    case "OldBalance":
-      if (drivebase.pitch() < -config.kk_level) {
+    case "Balancing":
+      if (drivebase.pitch() > config.kk_level) {
         drivebase.auto_drive_powerful(4);
-        SmartDashboard.putString("auto state", "balancing forward");
       }
-      else if (drivebase.pitch() > config.kk_level) {
+      else if (drivebase.pitch() < -config.kk_level) {
         drivebase.auto_drive_powerful(-4);
-        SmartDashboard.putString("auto state", "balancing backward");
       }
       else {
         drivebase.auto_drive(0);
-        SmartDashboard.putString("auto state", "balanced");
         /* don't ever leave the autobalance section
         setstate("End");
         */

@@ -236,7 +236,7 @@ private double clamp (double in, double range) {
     } else {
       position = 22;
     }
-    double speed = clamp(thetaPID.calculate(thetaAngle.get(), position), 0.4); 
+    double speed = clamp(thetaPID.calculate(thetaAngle.get(), position), 0.3); 
     rotator.set(ControlMode.PercentOutput,speed);
     SmartDashboard.putNumber("gripper/rotate", speed);
   }

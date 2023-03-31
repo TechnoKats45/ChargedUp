@@ -454,7 +454,6 @@ public void auto_slide(double position) {
     } else if (!autoextend) {
       auto_extend(extensioninches());
     }
-    bounding();
     if (autoextend) {
       val = extension_pid.calculate(extensioninches(), extension_target);
       extensionclamp = 0.4;
@@ -485,14 +484,15 @@ public void auto_slide(double position) {
     run_elevation();
     run_extension();
     run_slide();
+    bounding();
   } 
 
   private void bounding() {
     double elevationRadians = (elevationangle()/180) * Math.PI + Math.PI/2;
-    if ((Math.sin(elevationRadians) * (extensioninches() + config.kpc_armlength)) > config.kpc_maxheight) {
+    if (Math.sin(elevationRadians) * (extensioninches() + config.kpc_armlength) > config.kpc_maxheight) {
       auto_extend(extensioninches() - 1);
     }
-    else if (elevationRadians < (Math.PI / 2) && (Math.cos(elevationRadians)*(extensioninches() + config.kpc_armlength)) > config.kpc_maxlength) {
+    else if (elevationRadians < 0 && Math.cos(elevationRadians)*(extensioninches() + config.kpc_armlength) > config.kpc_maxlength) {
       auto_extend(extensioninches() - 1);
     }
   }

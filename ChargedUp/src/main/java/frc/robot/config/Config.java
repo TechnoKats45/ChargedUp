@@ -171,7 +171,6 @@ public final int kj_rightfar = 11; // base right far
   // vvv --- for single NEO550 motor (on SparkMAX):
   public final int kmc_intake = 10;
   public final boolean kk_intakeinvert = false;
-  public final int kk_grabcurrentlimit = 5;
   // ^^^ ---
   public final int kmc_theta = 11;
 // -- arm --

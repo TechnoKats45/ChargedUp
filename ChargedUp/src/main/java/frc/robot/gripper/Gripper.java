@@ -325,8 +325,7 @@ double gamepieceInches() {
     if (config.grab_neo550) {
       intake = new CANSparkMax(config.kmc_intake, MotorType.kBrushless);
       intake.setInverted(config.kk_intakeinvert);
-      intake.setIdleMode(IdleMode.kBrake);
-      intake.setSmartCurrentLimit(config.kk_grabcurrentlimit);
+      intake.setIdleMode(IdleMode.kBrake);  
     }
     rotator = new TalonSRX(config.kmc_theta);
     
